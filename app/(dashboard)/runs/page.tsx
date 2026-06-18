@@ -4,7 +4,7 @@ import { StatusBadge } from '@/components/ui/Badge'
 import { EmptyState } from '@/components/ui/EmptyState'
 import Link from 'next/link'
 import { Play } from 'lucide-react'
-import { formatDateTime, formatDuration, formatRelativeTime } from '@/lib/utils'
+import { formatDateTime, formatDuration, formatRelativeTime, cn } from '@/lib/utils'
 import type { RunWithBot } from '@/types'
 
 export const dynamic = 'force-dynamic'
@@ -88,25 +88,32 @@ export default async function RunsPage({
                 {allRuns.map((run) => (
                   <tr
                     key={run.id}
-                    className={highlightRun === run.id ? 'bg-blue-50 dark:bg-blue-900/10' : ''}
+                    className={cn(
+                      'cursor-pointer',
+                      highlightRun === run.id ? 'bg-blue-50 dark:bg-blue-900/10' : ''
+                    )}
                   >
                     <td>
-                      <Link href={`/bots/${run.bot_id}`} className="font-medium text-primary hover:text-blue-500 transition-colors">
+                      <Link href={`/runs/${run.id}`} className="font-medium text-primary hover:text-blue-500 transition-colors">
                         {run.bot.bot_name}
                       </Link>
                     </td>
                     <td className="text-secondary">{run.bot.client_name}</td>
-                    <td><StatusBadge status={run.status} /></td>
+                    <td><Link href={`/runs/${run.id}`}><StatusBadge status={run.status} /></Link></td>
                     <td className="text-secondary text-xs">
-                      <div>{formatDateTime(run.started_at)}</div>
-                      <div className="text-muted">{formatRelativeTime(run.started_at)}</div>
+                      <Link href={`/runs/${run.id}`} className="block hover:text-primary transition-colors">
+                        <div>{formatDateTime(run.started_at)}</div>
+                        <div className="text-muted">{formatRelativeTime(run.started_at)}</div>
+                      </Link>
                     </td>
                     <td className="text-secondary">{formatDuration(run.duration_secs)}</td>
                     <td className="text-secondary font-mono text-xs">{run.vm_name ?? '—'}</td>
                     <td className="max-w-xs">
-                      {run.summary_message ? (
-                        <span className="text-xs text-secondary truncate block">{run.summary_message}</span>
-                      ) : '—'}
+                      <Link href={`/runs/${run.id}`} className="block">
+                        {run.summary_message ? (
+                          <span className="text-xs text-secondary truncate block">{run.summary_message}</span>
+                        ) : <span className="text-muted text-xs">View timeline →</span>}
+                      </Link>
                     </td>
                   </tr>
                 ))}

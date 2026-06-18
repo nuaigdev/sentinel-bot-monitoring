@@ -127,11 +127,11 @@ export default async function BotDetailPage({ params }: { params: { id: string }
           ) : (
             <div className="divide-y divide-default">
               {allRuns.map((run) => (
-                <div key={run.id} className="px-5 py-4">
+                <div key={run.id} className="px-5 py-4 hover:bg-surface transition-colors">
                   <div className="flex items-start gap-4">
                     <div className="flex-1">
                       <div className="flex items-center gap-3 mb-1">
-                        <StatusBadge status={run.status} />
+                        <Link href={`/runs/${run.id}`}><StatusBadge status={run.status} /></Link>
                         <span className="text-xs text-muted">{formatDateTime(run.started_at)}</span>
                         {run.duration_secs != null && (
                           <span className="text-xs text-muted">· {formatDuration(run.duration_secs)}</span>
@@ -143,6 +143,9 @@ export default async function BotDetailPage({ params }: { params: { id: string }
                       {run.summary_message && (
                         <div className="text-xs text-secondary mb-2">{run.summary_message}</div>
                       )}
+                      <Link href={`/runs/${run.id}`} className="text-xs text-blue-500 hover:text-blue-400 transition-colors">
+                        View timeline →
+                      </Link>
 
                       {/* Run logs timeline */}
                       {run.run_logs.length > 0 && (
