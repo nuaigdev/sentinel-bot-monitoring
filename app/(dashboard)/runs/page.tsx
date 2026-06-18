@@ -105,13 +105,13 @@ export default async function RunsPage({
                       <div className="flex flex-col gap-1">
                         <Link
                           href={`/runs/${run.id}`}
-                          className="btn-secondary text-[11px] px-2 py-1 text-center leading-tight"
+                          className="btn-secondary text-[11px] px-2 py-1 text-center leading-tight hover:border-blue-500/50 hover:text-blue-500 hover:bg-blue-500/5"
                         >
                           View Run
                         </Link>
                         <Link
                           href={`/bots/${run.bot_id}`}
-                          className="btn-secondary text-[11px] px-2 py-1 text-center leading-tight"
+                          className="btn-secondary text-[11px] px-2 py-1 text-center leading-tight hover:border-blue-500/50 hover:text-blue-500 hover:bg-blue-500/5"
                         >
                           View Bot
                         </Link>

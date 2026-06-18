@@ -1,6 +1,7 @@
 'use client'
 
 import { BarChart2 } from 'lucide-react'
+import Link from 'next/link'
 import { format, subDays, parseISO } from 'date-fns'
 import { cn } from '@/lib/utils'
 import type { Run } from '@/types'
@@ -38,17 +39,25 @@ export function BotActivityChart({ runs }: BotActivityChartProps) {
   }
 
   const maxRuns = Math.max(...days.map((d) => d.runs.length), 1)
-  const segH = Math.max(8, Math.min(28, Math.floor(140 / maxRuns)))
+  const segH = Math.max(8, Math.min(28, Math.floor(120 / maxRuns)))
 
   return (
     <div className="card h-full flex flex-col">
-      {/* Header — matches LiveActivityFeed style */}
+      {/* Header — icon + title + View Runs link, matching other overview cards */}
       <div className="flex items-center justify-between px-5 py-4 border-b border-default shrink-0">
         <div className="flex items-center gap-2">
           <BarChart2 size={15} className="text-blue-500" />
           <span className="text-sm font-semibold text-primary">Bot Activity</span>
         </div>
-        <div className="flex items-center gap-3">
+        <Link href="/runs" className="text-xs text-blue-500 hover:text-blue-400 transition-colors">
+          View Runs →
+        </Link>
+      </div>
+
+      {/* Chart area */}
+      <div className="flex-1 flex flex-col px-5 pb-4 pt-3 min-h-0">
+        {/* Legend inside chart area */}
+        <div className="flex items-center gap-3 mb-3 shrink-0">
           {legend.map((l) => (
             <div key={l.label} className="flex items-center gap-1 text-[10px] text-muted">
               <span className={cn('w-2 h-2 rounded-full shrink-0', l.cls)} />
@@ -56,11 +65,9 @@ export function BotActivityChart({ runs }: BotActivityChartProps) {
             </div>
           ))}
         </div>
-      </div>
 
-      {/* Chart area */}
-      <div className="flex-1 flex flex-col px-5 pb-4 pt-3 min-h-0">
-        <div className="flex-1 flex items-end gap-[3px]" style={{ minHeight: 120 }}>
+        {/* Bars */}
+        <div className="flex-1 flex items-end gap-[3px]" style={{ minHeight: 100 }}>
           {days.map((day) => (
             <div
               key={day.key}
