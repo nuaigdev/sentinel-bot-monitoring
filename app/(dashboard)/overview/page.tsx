@@ -11,13 +11,13 @@ import { RecentFailures } from '@/components/overview/RecentFailures'
 import { MissedRuns } from '@/components/overview/MissedRuns'
 import { BotHealthCalendar } from '@/components/overview/BotHealthCalendar'
 import type {
-  OverviewStats, ActiveIncident, DashboardActivity, RunWithBot, BotCalendarRow, BotDayStatus,
+  OverviewStats, ActiveIncident, DashboardActivity, RunWithBot, BotCalendarRow,
   Bot, Run,
 } from '@/types'
 
 type RawRunWithBot = Run & { bots: Bot }
-import { format, subDays, parseISO } from 'date-fns'
-import { computeHealthScore, formatRelativeTime, getStatusLabel } from '@/lib/utils'
+import { subDays } from 'date-fns'
+import { computeHealthScore, formatRelativeTime } from '@/lib/utils'
 
 export const dynamic = 'force-dynamic'
 export const revalidate = 0
@@ -91,6 +91,7 @@ async function fetchOverviewData() {
     .select('*, bots!inner(*)')
     .in('status', ['failure', 'timeout', 'missed'])
     .gte('started_at', h48ago)
+    .is('acknowledged_at', null)
     .order('started_at', { ascending: false })
     .limit(20)
   const incidentRuns = (rawIncidentRuns ?? []) as unknown as RawRunWithBot[]
@@ -139,41 +140,30 @@ async function fetchOverviewData() {
     bot: r.bots,
   }))
 
-  // Bot health calendar — 30 days per bot
-  const days30 = Array.from({ length: 30 }, (_, i) =>
-    format(subDays(now, 29 - i), 'yyyy-MM-dd')
-  )
-
+  // Bot health calendar — last 30 runs per bot
   const { data: rawCalendarRuns } = await supabase
     .from('runs')
-    .select('bot_id, status, started_at')
+    .select('id, bot_id, status, started_at')
     .gte('started_at', d30ago)
     .neq('status', 'started')
-  const calendarRuns = (rawCalendarRuns ?? []) as { bot_id: string; status: string; started_at: string }[]
+  const calendarRuns = (rawCalendarRuns ?? []) as { id: string; bot_id: string; status: string; started_at: string }[]
 
-  const runsByBot: Record<string, Record<string, string>> = {}
+  const runsByBotId: Record<string, typeof calendarRuns> = {}
   for (const r of calendarRuns) {
-    const day = format(parseISO(r.started_at), 'yyyy-MM-dd')
-    if (!runsByBot[r.bot_id]) runsByBot[r.bot_id] = {}
-    const prev = runsByBot[r.bot_id][day]
-    // Priority: failure > timeout > missed > success
-    const priority: Record<string, number> = { failure: 4, timeout: 3, missed: 2, success: 1, started: 0 }
-    if (!prev || (priority[r.status] ?? 0) > (priority[prev] ?? 0)) {
-      runsByBot[r.bot_id][day] = r.status
-    }
+    if (!runsByBotId[r.bot_id]) runsByBotId[r.bot_id] = []
+    runsByBotId[r.bot_id].push(r)
   }
 
   const calendarRows: BotCalendarRow[] = allBots.slice(0, 20).map((bot) => ({
     bot,
-    days: days30.map((date): BotDayStatus => {
-      const status = runsByBot[bot.id]?.[date]
-      if (!status) return { date, status: 'no_run' }
-      if (status === 'success') return { date, status: 'success' }
-      if (status === 'failure') return { date, status: 'failure' }
-      if (status === 'timeout') return { date, status: 'timeout' }
-      if (status === 'missed') return { date, status: 'missed' }
-      return { date, status: 'no_run' }
-    }),
+    runs: (runsByBotId[bot.id] ?? [])
+      .sort((a, b) => new Date(a.started_at).getTime() - new Date(b.started_at).getTime())
+      .slice(-30)
+      .map((r) => ({
+        id: r.id,
+        status: r.status as 'success' | 'failure' | 'timeout' | 'missed',
+        started_at: r.started_at,
+      })),
   }))
 
   const activityRuns = recentRuns.map((r) => ({ status: r.status, started_at: r.started_at }))

@@ -65,9 +65,15 @@ export interface BotDayStatus {
   run_id?: string
 }
 
+export interface BotRunDot {
+  id: string
+  status: 'success' | 'failure' | 'timeout' | 'missed'
+  started_at: string
+}
+
 export interface BotCalendarRow {
   bot: Bot
-  days: BotDayStatus[]
+  runs: BotRunDot[]
 }
 
 export interface ActiveIncident {
