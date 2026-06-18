@@ -4,7 +4,7 @@ import { StatusBadge } from '@/components/ui/Badge'
 import { EmptyState } from '@/components/ui/EmptyState'
 import Link from 'next/link'
 import { Play } from 'lucide-react'
-import { formatDateTime, formatDuration, formatRelativeTime, cn } from '@/lib/utils'
+import { formatDateTime, formatDuration, formatRelativeTime } from '@/lib/utils'
 import type { RunWithBot } from '@/types'
 
 export const dynamic = 'force-dynamic'
@@ -12,7 +12,7 @@ export const dynamic = 'force-dynamic'
 export default async function RunsPage({
   searchParams,
 }: {
-  searchParams: { status?: string; bot_id?: string; run?: string }
+  searchParams: { status?: string; bot_id?: string }
 }) {
   const supabase = await createClient()
   const filterStatus = searchParams.status
@@ -32,8 +32,6 @@ export default async function RunsPage({
   const allRuns: RunWithBot[] = ((rawRuns ?? []) as unknown as RawRunWithBot[]).map(
     (r) => ({ ...r, bot: r.bots })
   )
-
-  const highlightRun = searchParams.run
 
   return (
     <div className="flex flex-col h-full overflow-hidden">
@@ -82,38 +80,41 @@ export default async function RunsPage({
                   <th>Duration</th>
                   <th>VM / Host</th>
                   <th>Summary</th>
+                  <th>Actions</th>
                 </tr>
               </thead>
               <tbody>
                 {allRuns.map((run) => (
-                  <tr
-                    key={run.id}
-                    className={cn(
-                      'cursor-pointer',
-                      highlightRun === run.id ? 'bg-blue-50 dark:bg-blue-900/10' : ''
-                    )}
-                  >
-                    <td>
-                      <Link href={`/runs/${run.id}`} className="font-medium text-primary hover:text-blue-500 transition-colors">
-                        {run.bot.bot_name}
-                      </Link>
-                    </td>
+                  <tr key={run.id}>
+                    <td className="font-medium text-primary">{run.bot.bot_name}</td>
                     <td className="text-secondary">{run.bot.client_name}</td>
-                    <td><Link href={`/runs/${run.id}`}><StatusBadge status={run.status} /></Link></td>
+                    <td><StatusBadge status={run.status} /></td>
                     <td className="text-secondary text-xs">
-                      <Link href={`/runs/${run.id}`} className="block hover:text-primary transition-colors">
-                        <div>{formatDateTime(run.started_at)}</div>
-                        <div className="text-muted">{formatRelativeTime(run.started_at)}</div>
-                      </Link>
+                      <div>{formatDateTime(run.started_at)}</div>
+                      <div className="text-muted">{formatRelativeTime(run.started_at)}</div>
                     </td>
                     <td className="text-secondary">{formatDuration(run.duration_secs)}</td>
                     <td className="text-secondary font-mono text-xs">{run.vm_name ?? '—'}</td>
                     <td className="max-w-xs">
-                      <Link href={`/runs/${run.id}`} className="block">
-                        {run.summary_message ? (
-                          <span className="text-xs text-secondary truncate block">{run.summary_message}</span>
-                        ) : <span className="text-muted text-xs">View timeline →</span>}
-                      </Link>
+                      {run.summary_message ? (
+                        <span className="text-xs text-secondary truncate block">{run.summary_message}</span>
+                      ) : <span className="text-muted text-xs">—</span>}
+                    </td>
+                    <td>
+                      <div className="flex items-center gap-2">
+                        <Link
+                          href={`/runs/${run.id}`}
+                          className="btn-secondary text-xs px-2 py-1"
+                        >
+                          View Run
+                        </Link>
+                        <Link
+                          href={`/bots/${run.bot_id}`}
+                          className="btn-secondary text-xs px-2 py-1"
+                        >
+                          View Bot
+                        </Link>
+                      </div>
                     </td>
                   </tr>
                 ))}
