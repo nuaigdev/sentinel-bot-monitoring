@@ -54,6 +54,7 @@ export function Sidebar({ userEmail }: SidebarProps) {
       .select('id', { count: 'exact', head: true })
       .in('status', ['failure', 'timeout', 'missed'])
       .gte('started_at', new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString())
+      .is('acknowledged_at', null)
       .then(({ count }) => setIncidentCount(count ?? 0))
   }, [])
 

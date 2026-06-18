@@ -78,6 +78,7 @@ export interface Database {
           duration_secs: number | null
           summary_message: string | null
           client_run_id: string | null
+          acknowledged_at: string | null
         }
         Insert: {
           id?: string
@@ -89,6 +90,7 @@ export interface Database {
           duration_secs?: number | null
           summary_message?: string | null
           client_run_id?: string | null
+          acknowledged_at?: string | null
         }
         Update: Partial<Database['public']['Tables']['runs']['Insert']>
       }

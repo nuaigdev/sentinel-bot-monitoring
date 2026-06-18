@@ -5,9 +5,16 @@ import { EmptyState } from '@/components/ui/EmptyState'
 import Link from 'next/link'
 import { AlertTriangle, CheckCircle2 } from 'lucide-react'
 import { formatDateTime, formatRelativeTime, formatDuration } from '@/lib/utils'
-import type { RunWithBot } from '@/types'
+import { AcknowledgeButton } from '@/components/incidents/AcknowledgeButton'
+import type { Run, Bot } from '@/types'
 
 export const dynamic = 'force-dynamic'
+
+type RawRunWithBot = Run & { bots: Bot }
+
+interface IncidentRun extends Run {
+  bot: Bot
+}
 
 export default async function IncidentsPage() {
   const supabase = await createClient()
@@ -21,15 +28,17 @@ export default async function IncidentsPage() {
     .gte('started_at', h48ago)
     .order('started_at', { ascending: false })
 
-  type RawRunWithBot = import('@/types').Run & { bots: import('@/types').Bot }
-  const incidents: RunWithBot[] = ((rawRuns ?? []) as unknown as RawRunWithBot[]).map(
+  const all: IncidentRun[] = ((rawRuns ?? []) as unknown as RawRunWithBot[]).map(
     (r) => ({ ...r, bot: r.bots })
   )
 
+  const open = all.filter((r) => !r.acknowledged_at)
+  const resolved = all.filter((r) => !!r.acknowledged_at)
+
   const counts = {
-    failure: incidents.filter((i) => i.status === 'failure').length,
-    timeout: incidents.filter((i) => i.status === 'timeout').length,
-    missed: incidents.filter((i) => i.status === 'missed').length,
+    failure: open.filter((i) => i.status === 'failure').length,
+    timeout: open.filter((i) => i.status === 'timeout').length,
+    missed: open.filter((i) => i.status === 'missed').length,
   }
 
   return (
@@ -48,65 +57,109 @@ export default async function IncidentsPage() {
               <div className={`text-3xl font-bold ${s.color}`}>{s.count}</div>
               <div>
                 <div className="text-sm font-medium text-primary">{s.label}</div>
-                <div className="text-xs text-muted">Last 48 hours</div>
+                <div className="text-xs text-muted">Unresolved · Last 48h</div>
               </div>
             </div>
           ))}
         </div>
 
-        {incidents.length === 0 ? (
+        {/* Open incidents */}
+        {open.length === 0 ? (
           <EmptyState
             icon={<CheckCircle2 size={40} className="text-green-500" />}
-            title="No incidents in the last 48 hours"
+            title="No open incidents"
             description="All bots are running as expected"
           />
         ) : (
-          <div className="card overflow-hidden">
-            <div className="px-5 py-4 border-b border-default flex items-center gap-2">
-              <AlertTriangle size={15} className="text-orange-500" />
-              <span className="text-sm font-semibold text-primary">Active Incidents ({incidents.length})</span>
-            </div>
-            <table className="w-full data-table">
-              <thead>
-                <tr>
-                  <th>Bot</th>
-                  <th>Client</th>
-                  <th>Status</th>
-                  <th>When</th>
-                  <th>Duration</th>
-                  <th>Issue</th>
-                </tr>
-              </thead>
-              <tbody>
-                {incidents.map((run) => (
-                  <tr key={run.id}>
-                    <td>
-                      <Link href={`/bots/${run.bot_id}`} className="font-medium text-primary hover:text-blue-500 transition-colors">
-                        {run.bot.bot_name}
-                      </Link>
-                    </td>
-                    <td className="text-secondary">{run.bot.client_name}</td>
-                    <td><StatusBadge status={run.status} /></td>
-                    <td className="text-secondary text-xs">
-                      <div>{formatDateTime(run.started_at)}</div>
-                      <div className="text-muted">{formatRelativeTime(run.started_at)}</div>
-                    </td>
-                    <td className="text-secondary">{formatDuration(run.duration_secs)}</td>
-                    <td className="max-w-sm">
-                      <span className="text-xs text-secondary">
-                        {run.summary_message ||
-                          (run.status === 'missed' ? 'Scheduled run never started' :
-                           run.status === 'timeout' ? 'Run exceeded time limit without reporting back' :
-                           'Run ended with failure status')}
-                      </span>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+          <IncidentTable
+            title={`Open Incidents (${open.length})`}
+            runs={open}
+            showResolve
+          />
+        )}
+
+        {/* Resolved */}
+        {resolved.length > 0 && (
+          <IncidentTable
+            title={`Resolved (${resolved.length})`}
+            runs={resolved}
+            showResolve={false}
+            muted
+          />
         )}
       </div>
+    </div>
+  )
+}
+
+function IncidentTable({
+  title,
+  runs,
+  showResolve,
+  muted = false,
+}: {
+  title: string
+  runs: IncidentRun[]
+  showResolve: boolean
+  muted?: boolean
+}) {
+  return (
+    <div className="card overflow-hidden">
+      <div className="px-5 py-4 border-b border-default flex items-center gap-2">
+        {muted
+          ? <CheckCircle2 size={15} className="text-green-500" />
+          : <AlertTriangle size={15} className="text-orange-500" />}
+        <span className="text-sm font-semibold text-primary">{title}</span>
+      </div>
+      <table className={`w-full data-table ${muted ? 'opacity-60' : ''}`}>
+        <thead>
+          <tr>
+            <th>Bot</th>
+            <th>Client</th>
+            <th>Status</th>
+            <th>When</th>
+            <th>Duration</th>
+            <th>Issue</th>
+            {showResolve && <th>Action</th>}
+          </tr>
+        </thead>
+        <tbody>
+          {runs.map((run) => (
+            <tr key={run.id}>
+              <td>
+                <Link href={`/bots/${run.bot_id}`} className="font-medium text-primary hover:text-blue-500 transition-colors">
+                  {run.bot.bot_name}
+                </Link>
+              </td>
+              <td className="text-secondary">{run.bot.client_name}</td>
+              <td><StatusBadge status={run.status} /></td>
+              <td className="text-secondary text-xs">
+                <div>{formatDateTime(run.started_at)}</div>
+                <div className="text-muted">{formatRelativeTime(run.started_at)}</div>
+              </td>
+              <td className="text-secondary">{formatDuration(run.duration_secs)}</td>
+              <td className="max-w-sm">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <Link href={`/runs/${run.id}`} className="text-xs text-blue-500 hover:text-blue-400 transition-colors shrink-0">
+                    View timeline →
+                  </Link>
+                  <span className="text-xs text-secondary">
+                    {run.summary_message ||
+                      (run.status === 'missed' ? 'Scheduled run never started' :
+                       run.status === 'timeout' ? 'Run exceeded time limit' :
+                       'Run ended with failure status')}
+                  </span>
+                </div>
+              </td>
+              {showResolve && (
+                <td>
+                  <AcknowledgeButton runId={run.id} />
+                </td>
+              )}
+            </tr>
+          ))}
+        </tbody>
+      </table>
     </div>
   )
 }
