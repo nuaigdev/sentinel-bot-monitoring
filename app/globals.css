@@ -1,0 +1,212 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --bg-primary: #eef2f7;
+    --bg-secondary: #e4eaf3;
+    --bg-card: #ffffff;
+    --text-primary: #0f172a;
+    --text-secondary: #475569;
+    --text-muted: #94a3b8;
+    --border: rgba(0, 0, 0, 0.07);
+    --border-strong: rgba(0, 0, 0, 0.13);
+    --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.04);
+    --shadow: 0 1px 3px rgba(0, 0, 0, 0.05), 0 4px 16px rgba(0, 0, 0, 0.06);
+    --shadow-md: 0 4px 8px rgba(0, 0, 0, 0.06), 0 12px 32px rgba(0, 0, 0, 0.08);
+    --shadow-lg: 0 8px 16px rgba(0, 0, 0, 0.08), 0 24px 48px rgba(0, 0, 0, 0.10);
+  }
+
+  .dark {
+    --bg-primary: #0d1117;
+    --bg-secondary: #161b27;
+    --bg-card: #1c2333;
+    --text-primary: #e8edf5;
+    --text-secondary: #8b97b0;
+    --text-muted: #5a6680;
+    --border: rgba(255, 255, 255, 0.07);
+    --border-strong: rgba(255, 255, 255, 0.13);
+    --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.4);
+    --shadow: 0 1px 4px rgba(0, 0, 0, 0.4), 0 4px 16px rgba(0, 0, 0, 0.3);
+    --shadow-md: 0 4px 8px rgba(0, 0, 0, 0.5), 0 12px 32px rgba(0, 0, 0, 0.4);
+    --shadow-lg: 0 8px 16px rgba(0, 0, 0, 0.6), 0 24px 48px rgba(0, 0, 0, 0.5);
+  }
+
+  body {
+    background-color: var(--bg-primary);
+    color: var(--text-primary);
+    font-family: 'Inter', system-ui, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  ::-webkit-scrollbar { width: 5px; height: 5px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb {
+    background: var(--border-strong);
+    border-radius: 99px;
+  }
+  ::-webkit-scrollbar-thumb:hover { background: var(--text-muted); }
+}
+
+@layer components {
+  .card {
+    background-color: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 1rem;
+    box-shadow: var(--shadow);
+    transition: box-shadow 0.15s ease;
+  }
+
+  .card-hover:hover {
+    box-shadow: var(--shadow-md);
+  }
+
+  .stat-card {
+    @apply card p-5 flex flex-col gap-4;
+  }
+
+  .page-header {
+    @apply flex items-center justify-between mb-6;
+  }
+
+  .section-title {
+    @apply text-xs font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-3;
+  }
+
+  .data-table th {
+    @apply text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider px-4 py-3 text-left;
+    background-color: var(--bg-secondary);
+  }
+
+  .data-table tr:first-child th:first-child { border-radius: 0.75rem 0 0 0; }
+  .data-table tr:first-child th:last-child  { border-radius: 0 0.75rem 0 0; }
+
+  .data-table td {
+    @apply px-4 py-3.5 text-sm border-t;
+    border-color: var(--border);
+  }
+
+  .data-table tr:hover td {
+    background-color: var(--bg-secondary);
+    transition: background-color 0.1s ease;
+  }
+
+  .sidebar-link {
+    @apply flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-150;
+    color: #94a3b8;
+  }
+
+  .sidebar-link:hover {
+    background-color: rgba(255, 255, 255, 0.06);
+    color: #e2e8f0;
+  }
+
+  .sidebar-link.active {
+    background: linear-gradient(135deg, rgba(59, 130, 246, 0.2), rgba(59, 130, 246, 0.08));
+    color: #93c5fd;
+    border-left: 2px solid #3b82f6;
+    padding-left: calc(0.75rem - 2px);
+  }
+
+  .badge {
+    @apply inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium;
+  }
+
+  .status-dot {
+    @apply inline-block w-2 h-2 rounded-full;
+  }
+
+  .input-field {
+    @apply w-full px-3.5 py-2.5 text-sm rounded-xl border transition-all duration-150;
+    background-color: var(--bg-secondary);
+    border-color: var(--border);
+    color: var(--text-primary);
+  }
+
+  .input-field::placeholder {
+    color: var(--text-muted);
+  }
+
+  .input-field:focus {
+    @apply outline-none;
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
+    background-color: var(--bg-card);
+  }
+
+  .btn-primary {
+    @apply inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all duration-150 disabled:opacity-50 disabled:cursor-not-allowed;
+    background: linear-gradient(135deg, #3b82f6, #2563eb);
+    color: white;
+    box-shadow: 0 1px 2px rgba(37, 99, 235, 0.3), 0 4px 12px rgba(37, 99, 235, 0.2);
+  }
+
+  .btn-primary:hover:not(:disabled) {
+    background: linear-gradient(135deg, #60a5fa, #3b82f6);
+    box-shadow: 0 2px 4px rgba(37, 99, 235, 0.4), 0 6px 16px rgba(37, 99, 235, 0.25);
+    transform: translateY(-1px);
+  }
+
+  .btn-primary:active:not(:disabled) {
+    transform: translateY(0);
+  }
+
+  .btn-secondary {
+    @apply inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium transition-all duration-150 disabled:opacity-50;
+    background-color: var(--bg-secondary);
+    color: var(--text-primary);
+    border: 1px solid var(--border);
+  }
+
+  .btn-secondary:hover {
+    border-color: var(--border-strong);
+    box-shadow: var(--shadow-sm);
+  }
+
+  .btn-danger {
+    @apply inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all duration-150;
+    background: linear-gradient(135deg, #ef4444, #dc2626);
+    color: white;
+    box-shadow: 0 1px 2px rgba(220, 38, 38, 0.3);
+  }
+
+  .btn-danger:hover {
+    background: linear-gradient(135deg, #f87171, #ef4444);
+    box-shadow: 0 2px 8px rgba(220, 38, 38, 0.35);
+    transform: translateY(-1px);
+  }
+
+  .btn-ghost {
+    @apply inline-flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-all duration-150;
+    color: var(--text-secondary);
+  }
+
+  .btn-ghost:hover {
+    background-color: var(--bg-secondary);
+    color: var(--text-primary);
+  }
+}
+
+@layer utilities {
+  .text-primary   { color: var(--text-primary); }
+  .text-secondary { color: var(--text-secondary); }
+  .text-muted     { color: var(--text-muted); }
+  .bg-card        { background-color: var(--bg-card); }
+  .bg-page        { background-color: var(--bg-primary); }
+  .bg-surface     { background-color: var(--bg-secondary); }
+  .border-default { border-color: var(--border); }
+
+  .animate-pulse-ring {
+    animation: pulseRing 2s cubic-bezier(0.455, 0.03, 0.515, 0.955) infinite;
+  }
+
+  @keyframes pulseRing {
+    0%   { transform: scale(0.8); opacity: 0.8; }
+    50%  { transform: scale(1.1); opacity: 0.4; }
+    100% { transform: scale(0.8); opacity: 0.8; }
+  }
+}

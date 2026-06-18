@@ -1,0 +1,21 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(python -c ' *)",
+      "Bash(Out-File -Encoding UTF8 \"C:\\\\programming\\\\RD\\\\sentinel\\\\spec_content.txt\")",
+      "Bash(Get-Content \"C:\\\\programming\\\\RD\\\\sentinel\\\\spec_content.txt\" -Raw)",
+      "Bash(npm install *)",
+      "Bash(npm run *)",
+      "Bash(node -e \"console.log\\(require\\('./node_modules/next/package.json'\\).version\\)\")",
+      "Bash(grep -v \"^$\")",
+      "Bash(npx tsc *)",
+      "Bash(npx next *)",
+      "Bash(node -e \"const m = require\\('@supabase/ssr'\\); console.log\\(Object.keys\\(m\\)\\)\")",
+      "Bash(node -e \"const t = require\\('typescript'\\); const src = require\\('fs'\\).readFileSync\\('node_modules/@supabase/ssr/dist/main/types.d.ts','utf8'\\); console.log\\(src.slice\\(0,3000\\)\\)\")",
+      "Bash(Remove-Item -Recurse -Force \"C:\\\\programming\\\\RD\\\\sentinel\\\\sentinel-bot-monitoring\\\\.next\" -ErrorAction SilentlyContinue)",
+      "Bash(Write-Host \"Cache cleared\")",
+      "Bash(git init *)",
+      "Bash(git add *)"
+    ]
+  }
+}
