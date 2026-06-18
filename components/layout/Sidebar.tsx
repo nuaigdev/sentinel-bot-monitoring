@@ -9,7 +9,6 @@ import {
   Bot,
   Play,
   AlertTriangle,
-  Key,
   Settings,
   LogOut,
   ChevronLeft,
@@ -26,7 +25,6 @@ const navItems = [
   { label: 'Bots',      href: '/bots',      icon: Bot },
   { label: 'Runs',      href: '/runs',      icon: Play },
   { label: 'Incidents', href: '/incidents', icon: AlertTriangle },
-  { label: 'API Keys',  href: '/api-keys',  icon: Key },
   { label: 'Usage',     href: '/usage',     icon: BookOpen },
   { label: 'Settings',  href: '/settings',  icon: Settings },
 ]
