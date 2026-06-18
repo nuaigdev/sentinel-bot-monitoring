@@ -21,18 +21,21 @@
   }
 
   .dark {
-    --bg-primary: #0d1117;
-    --bg-secondary: #161b27;
-    --bg-card: #1c2333;
-    --text-primary: #e8edf5;
-    --text-secondary: #8b97b0;
-    --text-muted: #5a6680;
-    --border: rgba(255, 255, 255, 0.07);
-    --border-strong: rgba(255, 255, 255, 0.13);
-    --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.4);
-    --shadow: 0 1px 4px rgba(0, 0, 0, 0.4), 0 4px 16px rgba(0, 0, 0, 0.3);
-    --shadow-md: 0 4px 8px rgba(0, 0, 0, 0.5), 0 12px 32px rgba(0, 0, 0, 0.4);
-    --shadow-lg: 0 8px 16px rgba(0, 0, 0, 0.6), 0 24px 48px rgba(0, 0, 0, 0.5);
+    /* Mid-dark slate — not near-black. Cards need a clear "lift" over the page. */
+    --bg-primary: #13151f;
+    --bg-secondary: #1a1d2b;
+    --bg-card: #20253c;
+    --text-primary: #edf0fa;
+    --text-secondary: #8d98bc;
+    --text-muted: #555f7a;
+    /* Blue-tinted borders — more visible and cohesive with the palette */
+    --border: rgba(120, 140, 200, 0.13);
+    --border-strong: rgba(120, 140, 200, 0.24);
+    /* Lighter shadows — heavy black shadows on dark bg look muddy, not deep */
+    --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.2);
+    --shadow: 0 2px 8px rgba(0, 0, 0, 0.18), 0 1px 2px rgba(0, 0, 0, 0.12);
+    --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.22), 0 2px 4px rgba(0, 0, 0, 0.14);
+    --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.3), 0 4px 8px rgba(0, 0, 0, 0.16);
   }
 
   body {
@@ -61,8 +64,19 @@
     transition: box-shadow 0.15s ease;
   }
 
+  /* In dark mode give cards a subtle gradient + inner-top highlight for depth */
+  .dark .card {
+    background: linear-gradient(160deg, #262c44 0%, #1e2339 100%);
+    border-color: rgba(120, 140, 200, 0.15);
+    box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.04) inset, var(--shadow);
+  }
+
   .card-hover:hover {
     box-shadow: var(--shadow-md);
+  }
+
+  .dark .card-hover:hover {
+    box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.06) inset, var(--shadow-md);
   }
 
   .stat-card {
@@ -78,8 +92,9 @@
   }
 
   .data-table th {
-    @apply text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider px-4 py-3 text-left;
+    @apply text-xs font-medium uppercase tracking-wider px-4 py-3 text-left;
     background-color: var(--bg-secondary);
+    color: var(--text-muted);
   }
 
   .data-table tr:first-child th:first-child { border-radius: 0.75rem 0 0 0; }
