@@ -74,43 +74,44 @@ export default async function RunsPage({
               <thead>
                 <tr>
                   <th>Bot</th>
-                  <th>Client</th>
                   <th>Status</th>
                   <th>Started</th>
                   <th>Duration</th>
                   <th>VM / Host</th>
                   <th>Summary</th>
-                  <th>Actions</th>
+                  <th className="w-20">Actions</th>
                 </tr>
               </thead>
               <tbody>
                 {allRuns.map((run) => (
                   <tr key={run.id}>
-                    <td className="font-medium text-primary">{run.bot.bot_name}</td>
-                    <td className="text-secondary">{run.bot.client_name}</td>
-                    <td><StatusBadge status={run.status} /></td>
-                    <td className="text-secondary text-xs">
+                    <td className="whitespace-nowrap">
+                      <div className="font-medium text-primary text-sm">{run.bot.bot_name}</div>
+                      <div className="text-[11px] text-muted">{run.bot.client_name}</div>
+                    </td>
+                    <td className="whitespace-nowrap"><StatusBadge status={run.status} /></td>
+                    <td className="whitespace-nowrap text-xs text-secondary">
                       <div>{formatDateTime(run.started_at)}</div>
                       <div className="text-muted">{formatRelativeTime(run.started_at)}</div>
                     </td>
-                    <td className="text-secondary">{formatDuration(run.duration_secs)}</td>
-                    <td className="text-secondary font-mono text-xs">{run.vm_name ?? '—'}</td>
+                    <td className="whitespace-nowrap text-xs text-secondary">{formatDuration(run.duration_secs)}</td>
+                    <td className="whitespace-nowrap text-xs font-mono text-secondary">{run.vm_name ?? '—'}</td>
                     <td className="max-w-xs">
-                      {run.summary_message ? (
-                        <span className="text-xs text-secondary truncate block">{run.summary_message}</span>
-                      ) : <span className="text-muted text-xs">—</span>}
+                      <span className="text-xs text-secondary line-clamp-2">
+                        {run.summary_message || '—'}
+                      </span>
                     </td>
-                    <td>
-                      <div className="flex items-center gap-2">
+                    <td className="whitespace-nowrap w-20">
+                      <div className="flex flex-col gap-1">
                         <Link
                           href={`/runs/${run.id}`}
-                          className="btn-secondary text-xs px-2 py-1"
+                          className="btn-secondary text-[11px] px-2 py-1 text-center leading-tight"
                         >
                           View Run
                         </Link>
                         <Link
                           href={`/bots/${run.bot_id}`}
-                          className="btn-secondary text-xs px-2 py-1"
+                          className="btn-secondary text-[11px] px-2 py-1 text-center leading-tight"
                         >
                           View Bot
                         </Link>
