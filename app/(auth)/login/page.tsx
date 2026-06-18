@@ -8,7 +8,6 @@ import {
   ShieldCheck,
   Activity,
   Bell,
-  BarChart3,
   Key,
   Zap,
   CheckCircle2,
@@ -32,13 +31,6 @@ const features = [
     description: 'Automatically surface missed runs and silent timeouts before they impact business operations.',
     color: 'text-orange-500',
     bg: 'bg-orange-500/10',
-  },
-  {
-    icon: BarChart3,
-    title: 'Health Score & Analytics',
-    description: 'Aggregate success rates, run history calendars, and trend analysis across all your Power Automate flows.',
-    color: 'text-green-500',
-    bg: 'bg-green-500/10',
   },
   {
     icon: Key,
