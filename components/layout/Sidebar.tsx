@@ -31,7 +31,7 @@ const navItems = [
   { label: 'Alerts',    href: '/alerts',    icon: Bell },
   { label: 'Reports',   href: '/reports',   icon: BarChart3 },
   { label: 'API Keys',  href: '/api-keys',  icon: Key },
-  { label: 'Docs',      href: '/docs',      icon: BookOpen },
+  { label: 'Usage',     href: '/usage',     icon: BookOpen },
   { label: 'Settings',  href: '/settings',  icon: Settings },
 ]
 
