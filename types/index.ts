@@ -19,7 +19,7 @@ export type RunLogInsert = Database['public']['Tables']['run_logs']['Insert']
 
 export type RunStatus = Run['status']
 export type BotType = Bot['bot_type']
-export type ScheduleType = Bot['schedule_type']
+export type ScheduleType = 'cron' | 'fixed_times' | 'manual' | 'weekly' | 'monthly' | 'annually'
 export type LogLevel = RunLog['level']
 
 export type TimeScope = '24h' | '7d' | '30d' | '1y'

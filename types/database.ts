@@ -27,9 +27,13 @@ export interface Database {
           owner_email: string
           description: string | null
           tags: string[]
-          schedule_type: 'cron' | 'fixed_times' | 'manual'
+          schedule_type: 'cron' | 'fixed_times' | 'manual' | 'weekly' | 'monthly' | 'annually'
           schedule_cron: string | null
           schedule_fixed_times: string | null
+          schedule_days_of_week: string | null
+          schedule_day_of_month: number | null
+          schedule_month: number | null
+          schedule_time: string | null
           time_allocated_secs: number
           missed_grace_secs: number
           allow_concurrent_runs: boolean
@@ -46,9 +50,13 @@ export interface Database {
           owner_email: string
           description?: string | null
           tags?: string[]
-          schedule_type: 'cron' | 'fixed_times' | 'manual'
+          schedule_type: 'cron' | 'fixed_times' | 'manual' | 'weekly' | 'monthly' | 'annually'
           schedule_cron?: string | null
           schedule_fixed_times?: string | null
+          schedule_days_of_week?: string | null
+          schedule_day_of_month?: number | null
+          schedule_month?: number | null
+          schedule_time?: string | null
           time_allocated_secs?: number
           missed_grace_secs?: number
           allow_concurrent_runs?: boolean
