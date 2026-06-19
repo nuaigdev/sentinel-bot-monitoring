@@ -1,5 +1,8 @@
 import type { Database } from './database'
 
+export type Client = Database['public']['Tables']['clients']['Row']
+export type ClientInsert = Database['public']['Tables']['clients']['Insert']
+
 export type Bot = Database['public']['Tables']['bots']['Row']
 export type BotInsert = Database['public']['Tables']['bots']['Insert']
 export type BotUpdate = Database['public']['Tables']['bots']['Update']
@@ -19,7 +22,14 @@ export type BotType = Bot['bot_type']
 export type ScheduleType = Bot['schedule_type']
 export type LogLevel = RunLog['level']
 
-export interface BotWithStats extends Bot {
+export type TimeScope = '24h' | '7d' | '30d' | '1y'
+
+/** Bot row joined with its parent client. Used everywhere a client name is displayed. */
+export interface BotWithClient extends Bot {
+  clients: Pick<Client, 'id' | 'name'> | null
+}
+
+export interface BotWithStats extends BotWithClient {
   total_runs: number
   success_runs: number
   failure_runs: number
@@ -30,13 +40,18 @@ export interface BotWithStats extends Bot {
   active_run?: Run | null
 }
 
+/** Client with its associated bots (used on the Clients management page). */
+export interface ClientWithBots extends Client {
+  bots: BotWithStats[]
+}
+
 export interface RunWithBot extends Run {
-  bot: Bot
+  bot: BotWithClient
 }
 
 export interface RunWithLogs extends Run {
   run_logs: RunLog[]
-  bot: Bot
+  bot: BotWithClient
 }
 
 export interface OverviewStats {
@@ -72,7 +87,7 @@ export interface BotRunDot {
 }
 
 export interface BotCalendarRow {
-  bot: Bot
+  bot: BotWithClient
   runs: BotRunDot[]
 }
 

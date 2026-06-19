@@ -3,10 +3,25 @@ export type Json = string | number | boolean | null | { [key: string]: Json | un
 export interface Database {
   public: {
     Tables: {
+      clients: {
+        Row: {
+          id: string
+          name: string
+          created_at: string
+          created_by: string | null
+        }
+        Insert: {
+          id?: string
+          name: string
+          created_at?: string
+          created_by?: string | null
+        }
+        Update: Partial<Database['public']['Tables']['clients']['Insert']>
+      }
       bots: {
         Row: {
           id: string
-          client_name: string
+          client_id: string | null
           bot_name: string
           bot_type: 'cloud' | 'desktop'
           owner_email: string
@@ -25,7 +40,7 @@ export interface Database {
         }
         Insert: {
           id?: string
-          client_name: string
+          client_id?: string | null
           bot_name: string
           bot_type: 'cloud' | 'desktop'
           owner_email: string

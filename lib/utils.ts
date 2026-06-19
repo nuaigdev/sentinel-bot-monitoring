@@ -1,7 +1,7 @@
 import { clsx, type ClassValue } from 'clsx'
 import { twMerge } from 'tailwind-merge'
 import { formatDistanceToNow, format, parseISO } from 'date-fns'
-import type { RunStatus, LogLevel } from '@/types'
+import type { RunStatus, LogLevel, TimeScope } from '@/types'
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
@@ -102,6 +102,39 @@ export function getStatusLabel(status: RunStatus): string {
 export function computeHealthScore(successCount: number, totalCount: number): number {
   if (totalCount === 0) return 100
   return Math.round((successCount / totalCount) * 100)
+}
+
+export function getPeriod(scope: TimeScope, offset: number): {
+  start: Date
+  end: Date
+  shortLabel: string
+  fullLabel: string
+} {
+  const now = new Date()
+  const durations: Record<TimeScope, number> = {
+    '24h': 24 * 3600 * 1000,
+    '7d':  7  * 24 * 3600 * 1000,
+    '30d': 30 * 24 * 3600 * 1000,
+    '1y':  365 * 24 * 3600 * 1000,
+  }
+  const names: Record<TimeScope, string> = {
+    '24h': '24h', '7d': '7d', '30d': '30d', '1y': '1y',
+  }
+  const durationMs = durations[scope]
+  const end   = new Date(now.getTime() - offset * durationMs)
+  const start = new Date(end.getTime() - durationMs)
+
+  let fullLabel: string
+  if (offset === 0) {
+    const scopeNames: Record<TimeScope, string> = {
+      '24h': 'Last 24 Hours', '7d': 'Last 7 Days', '30d': 'Last 30 Days', '1y': 'Last Year',
+    }
+    fullLabel = scopeNames[scope]
+  } else {
+    fullLabel = `${format(start, 'MMM d')} – ${format(end, 'MMM d, yyyy')}`
+  }
+
+  return { start, end, shortLabel: names[scope], fullLabel }
 }
 
 export function generateNextRun(bot: { schedule_type: string; schedule_cron?: string | null; schedule_fixed_times?: string | null }): Date | null {
