@@ -10,7 +10,7 @@ import { PageLoader } from '@/components/ui/Spinner'
 import { createClient } from '@/lib/supabase/client'
 import {
   Bot, Plus, Download, Search, ChevronLeft, ChevronRight,
-  CheckCircle2, XCircle, Play, AlertCircle, Clock
+  CheckCircle2, XCircle, Play, AlertCircle
 } from 'lucide-react'
 import type { BotWithStats, Run } from '@/types'
 import { formatRelativeTime, formatAllocatedTime, formatDate, cn } from '@/lib/utils'
@@ -25,11 +25,20 @@ export default function BotsPage() {
   const [selectedBotId, setSelectedBotId] = useState<string | null>(null)
   const [selectedBotName, setSelectedBotName] = useState<string | null>(null)
   const [search, setSearch] = useState('')
-  const [filterClient, setFilterClient] = useState('all')
+  const [filterClientId, setFilterClientId] = useState('all')
   const [filterType, setFilterType] = useState('all')
   const [filterStatus, setFilterStatus] = useState('all')
   const [page, setPage] = useState(0)
   const [total, setTotal] = useState(0)
+  const [clients, setClients] = useState<{ id: string; name: string }[]>([])
+
+  useEffect(() => {
+    createClient()
+      .from('clients')
+      .select('id, name')
+      .order('name')
+      .then(({ data }) => setClients(data ?? []))
+  }, [])
 
   // eslint-disable-next-line react-hooks/exhaustive-deps
   const loadBots = useCallback(async () => {
@@ -38,11 +47,11 @@ export default function BotsPage() {
     try {
       let query = supabase
         .from('bots')
-        .select('*', { count: 'exact' })
+        .select('*, clients(id, name)', { count: 'exact' })
         .order('bot_name')
 
-      if (search) query = query.or(`bot_name.ilike.%${search}%,client_name.ilike.%${search}%`)
-      if (filterClient !== 'all') query = query.eq('client_name', filterClient)
+      if (search) query = query.ilike('bot_name', `%${search}%`)
+      if (filterClientId !== 'all') query = query.eq('client_id', filterClientId)
       if (filterType !== 'all') query = query.eq('bot_type', filterType)
       if (filterStatus === 'active') query = query.eq('is_active', true)
       if (filterStatus === 'inactive') query = query.eq('is_active', false)
@@ -55,8 +64,7 @@ export default function BotsPage() {
 
       if (!rawBots) { setBots([]); return }
 
-      // Fetch run stats for each bot
-      type BotRow = import('@/types').Bot
+      type BotRow = import('@/types').BotWithClient
       const bots2 = rawBots as unknown as BotRow[]
       const botIds = bots2.map((b) => b.id)
       const h24ago = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString()
@@ -114,11 +122,9 @@ export default function BotsPage() {
     } finally {
       setLoading(false)
     }
-  }, [search, filterClient, filterType, filterStatus, page])
+  }, [search, filterClientId, filterType, filterStatus, page])
 
   useEffect(() => { loadBots() }, [loadBots])
-
-  const clients = Array.from(new Set(bots.map((b) => b.client_name))).sort()
 
   const totalPages = Math.ceil(total / PAGE_SIZE)
 
@@ -173,16 +179,16 @@ export default function BotsPage() {
                 className="input-field pl-8 py-1.5"
                 value={search}
                 onChange={(e) => { setSearch(e.target.value); setPage(0) }}
-                placeholder="Search bots or clients…"
+                placeholder="Search bots…"
               />
             </div>
             <select
               className="input-field py-1.5 w-auto"
-              value={filterClient}
-              onChange={(e) => { setFilterClient(e.target.value); setPage(0) }}
+              value={filterClientId}
+              onChange={(e) => { setFilterClientId(e.target.value); setPage(0) }}
             >
               <option value="all">All Clients</option>
-              {clients.map((c) => <option key={c} value={c}>{c}</option>)}
+              {clients.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
             </select>
             <select
               className="input-field py-1.5 w-auto"
@@ -271,7 +277,7 @@ export default function BotsPage() {
                             </div>
                           </div>
                         </td>
-                        <td className="text-secondary">{bot.client_name}</td>
+                        <td className="text-secondary">{bot.clients?.name ?? '—'}</td>
                         <td>
                           {currentStatus ? (
                             <StatusBadge status={currentStatus} />

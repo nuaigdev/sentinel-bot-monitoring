@@ -1,12 +1,12 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Modal } from '@/components/ui/Modal'
-import { Copy, CheckCircle2 } from 'lucide-react'
+import { Copy, CheckCircle2, Plus } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 interface BotFormData {
-  client_name: string
+  client_id: string
   bot_name: string
   bot_type: 'cloud' | 'desktop'
   owner_email: string
@@ -18,6 +18,22 @@ interface BotFormData {
   missed_grace_secs: number
   allow_concurrent_runs: boolean
 }
+
+const emptyForm: BotFormData = {
+  client_id: '',
+  bot_name: '',
+  bot_type: 'cloud',
+  owner_email: '',
+  description: '',
+  schedule_type: 'manual',
+  schedule_cron: '',
+  schedule_fixed_times: '',
+  time_allocated_secs: 3600,
+  missed_grace_secs: 300,
+  allow_concurrent_runs: false,
+}
+
+interface ClientOption { id: string; name: string }
 
 interface BotRegistrationModalProps {
   open: boolean
@@ -33,22 +49,44 @@ export function BotRegistrationModal({ open, onClose, onSuccess }: BotRegistrati
   const [createdBotName, setCreatedBotName] = useState('')
   const [copied, setCopied] = useState(false)
 
-  const [form, setForm] = useState<BotFormData>({
-    client_name: '',
-    bot_name: '',
-    bot_type: 'cloud',
-    owner_email: '',
-    description: '',
-    schedule_type: 'manual',
-    schedule_cron: '',
-    schedule_fixed_times: '',
-    time_allocated_secs: 3600,
-    missed_grace_secs: 300,
-    allow_concurrent_runs: false,
-  })
+  const [form, setForm] = useState<BotFormData>(emptyForm)
+  const [clients, setClients] = useState<ClientOption[]>([])
+  const [newClientMode, setNewClientMode] = useState(false)
+  const [newClientName, setNewClientName] = useState('')
+  const [creatingClient, setCreatingClient] = useState(false)
+
+  useEffect(() => {
+    if (!open) return
+    fetch('/api/v1/clients')
+      .then((r) => r.json())
+      .then((d) => setClients(d.clients ?? []))
+      .catch(() => {})
+  }, [open])
 
   const update = (field: keyof BotFormData, value: string | number | boolean) => {
     setForm((f) => ({ ...f, [field]: value }))
+  }
+
+  const handleCreateClient = async () => {
+    const name = newClientName.trim()
+    if (!name) return
+    setCreatingClient(true)
+    try {
+      const res = await fetch('/api/v1/clients', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name }),
+      })
+      const data = await res.json()
+      if (!res.ok) { setError(data.error || 'Failed to create client'); return }
+      const newClient = data.client as ClientOption
+      setClients((prev) => [...prev, newClient].sort((a, b) => a.name.localeCompare(b.name)))
+      setForm((f) => ({ ...f, client_id: newClient.id }))
+      setNewClientMode(false)
+      setNewClientName('')
+    } finally {
+      setCreatingClient(false)
+    }
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -84,12 +122,9 @@ export function BotRegistrationModal({ open, onClose, onSuccess }: BotRegistrati
     setStep('form')
     setCreatedKey('')
     setError(null)
-    setForm({
-      client_name: '', bot_name: '', bot_type: 'cloud', owner_email: '',
-      description: '', schedule_type: 'manual', schedule_cron: '',
-      schedule_fixed_times: '', time_allocated_secs: 3600,
-      missed_grace_secs: 300, allow_concurrent_runs: false,
-    })
+    setForm(emptyForm)
+    setNewClientMode(false)
+    setNewClientName('')
     onClose()
   }
 
@@ -143,16 +178,60 @@ export function BotRegistrationModal({ open, onClose, onSuccess }: BotRegistrati
       ) : (
         <form onSubmit={handleSubmit} className="space-y-5">
           <div className="grid grid-cols-2 gap-4">
+            {/* Client selector */}
             <div>
-              <label className="block text-xs font-medium text-muted mb-1">Client Name *</label>
-              <input
-                className="input-field"
-                value={form.client_name}
-                onChange={(e) => update('client_name', e.target.value)}
-                placeholder="e.g. Fellowship, Mather"
-                required
-              />
+              <label className="block text-xs font-medium text-muted mb-1">Client *</label>
+              {newClientMode ? (
+                <div className="flex items-center gap-1.5">
+                  <input
+                    className="input-field flex-1"
+                    value={newClientName}
+                    onChange={(e) => setNewClientName(e.target.value)}
+                    placeholder="New client name"
+                    autoFocus
+                    onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), handleCreateClient())}
+                  />
+                  <button
+                    type="button"
+                    className="btn-primary shrink-0 px-2"
+                    onClick={handleCreateClient}
+                    disabled={creatingClient || !newClientName.trim()}
+                  >
+                    {creatingClient ? '…' : 'Add'}
+                  </button>
+                  <button
+                    type="button"
+                    className="btn-secondary shrink-0 px-2"
+                    onClick={() => { setNewClientMode(false); setNewClientName('') }}
+                  >
+                    ✕
+                  </button>
+                </div>
+              ) : (
+                <div className="flex items-center gap-1.5">
+                  <select
+                    className="input-field flex-1"
+                    value={form.client_id}
+                    onChange={(e) => update('client_id', e.target.value)}
+                    required
+                  >
+                    <option value="">— Select client —</option>
+                    {clients.map((c) => (
+                      <option key={c.id} value={c.id}>{c.name}</option>
+                    ))}
+                  </select>
+                  <button
+                    type="button"
+                    className="btn-secondary shrink-0 px-2"
+                    onClick={() => setNewClientMode(true)}
+                    title="Create new client"
+                  >
+                    <Plus size={14} />
+                  </button>
+                </div>
+              )}
             </div>
+
             <div>
               <label className="block text-xs font-medium text-muted mb-1">Bot Name *</label>
               <input

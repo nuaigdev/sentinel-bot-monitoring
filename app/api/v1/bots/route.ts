@@ -28,7 +28,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 })
   }
 
-  const required = ['client_name', 'bot_name', 'bot_type', 'owner_email', 'schedule_type']
+  const required = ['client_id', 'bot_name', 'bot_type', 'owner_email', 'schedule_type']
   for (const field of required) {
     if (!body[field]) {
       return NextResponse.json({ error: `${field} is required` }, { status: 400 })
@@ -49,7 +49,7 @@ export async function POST(request: NextRequest) {
   const { data: bot, error: botError } = await svc
     .from('bots')
     .insert({
-      client_name: body.client_name as string,
+      client_id: body.client_id as string,
       bot_name: body.bot_name as string,
       bot_type: body.bot_type as 'cloud' | 'desktop',
       owner_email: body.owner_email as string,

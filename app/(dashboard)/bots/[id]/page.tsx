@@ -6,7 +6,7 @@ import { EmptyState } from '@/components/ui/EmptyState'
 import Link from 'next/link'
 import { ArrowLeft, Play, CheckCircle2, XCircle, Clock, AlertCircle, Bot as BotIcon, Calendar } from 'lucide-react'
 import { formatDateTime, formatDuration, formatAllocatedTime, levelBgColors, cn } from '@/lib/utils'
-import type { Run, RunLog, Bot } from '@/types'
+import type { Run, RunLog, BotWithClient } from '@/types'
 
 export const dynamic = 'force-dynamic'
 
@@ -19,12 +19,12 @@ export default async function BotDetailPage({ params }: { params: { id: string }
 
   const { data: rawBot } = await supabase
     .from('bots')
-    .select('*')
+    .select('*, clients(id, name)')
     .eq('id', params.id)
     .single()
 
   if (!rawBot) notFound()
-  const bot = rawBot as Bot
+  const bot = rawBot as unknown as BotWithClient
 
   const { data: runs } = await supabase
     .from('runs')
@@ -41,7 +41,7 @@ export default async function BotDetailPage({ params }: { params: { id: string }
 
   return (
     <div className="flex flex-col h-full overflow-hidden">
-      <Header title={bot.bot_name} subtitle={`${bot.client_name} · ${bot.bot_type}`}>
+      <Header title={bot.bot_name} subtitle={`${bot.clients?.name ?? '—'} · ${bot.bot_type}`}>
         <Link href="/bots" className="btn-secondary">
           <ArrowLeft size={14} />
           Back to Bots
