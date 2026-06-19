@@ -2,6 +2,7 @@ import { createClient } from '@/lib/supabase/server'
 import { Header } from '@/components/layout/Header'
 import { StatusBadge } from '@/components/ui/Badge'
 import { EmptyState } from '@/components/ui/EmptyState'
+import { ClientFilter } from '@/components/ui/ClientFilter'
 import Link from 'next/link'
 import { AlertTriangle, CheckCircle2 } from 'lucide-react'
 import { formatDateTime, formatRelativeTime, formatDuration } from '@/lib/utils'
@@ -16,17 +17,40 @@ interface IncidentRun extends Run {
   bot: BotWithClient
 }
 
-export default async function IncidentsPage() {
+export default async function IncidentsPage({
+  searchParams,
+}: {
+  searchParams: { clientId?: string }
+}) {
   const supabase = await createClient()
+  // eslint-disable-next-line
+  const svc: any = supabase
+
+  const filterClientId = searchParams.clientId
+
+  const { data: clientsData } = await svc.from('clients').select('id, name').order('name')
+  const allClients: { id: string; name: string }[] = clientsData ?? []
+
+  let clientBotIds: string[] | null = null
+  if (filterClientId) {
+    const { data: botRows } = await svc.from('bots').select('id').eq('client_id', filterClientId)
+    clientBotIds = (botRows ?? []).map((b: { id: string }) => b.id)
+  }
 
   const h48ago = new Date(Date.now() - 48 * 60 * 60 * 1000).toISOString()
 
-  const { data: rawRuns } = await supabase
+  let query = supabase
     .from('runs')
     .select('*, bots!inner(*, clients(id, name))')
     .in('status', ['failure', 'timeout', 'missed'])
     .gte('started_at', h48ago)
     .order('started_at', { ascending: false })
+
+  if (clientBotIds !== null) {
+    query = query.in('bot_id', clientBotIds.length > 0 ? clientBotIds : [''])
+  }
+
+  const { data: rawRuns } = await query
 
   const all: IncidentRun[] = ((rawRuns ?? []) as unknown as RawRunWithBot[]).map(
     (r) => ({ ...r, bot: r.bots })
@@ -44,6 +68,11 @@ export default async function IncidentsPage() {
   return (
     <div className="flex flex-col h-full overflow-hidden">
       <Header title="Incidents" subtitle="Failures, timeouts, and missed runs in the last 48 hours" />
+
+      <div className="px-6 pt-4 flex items-center justify-between border-b border-default pb-3">
+        <span className="text-xs text-muted">Last 48 hours</span>
+        <ClientFilter clients={allClients} selectedId={filterClientId ?? 'all'} />
+      </div>
 
       <div className="flex-1 overflow-y-auto p-6 space-y-5">
         {/* Summary */}

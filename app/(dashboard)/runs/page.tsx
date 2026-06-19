@@ -2,6 +2,7 @@ import { createClient } from '@/lib/supabase/server'
 import { Header } from '@/components/layout/Header'
 import { StatusBadge } from '@/components/ui/Badge'
 import { EmptyState } from '@/components/ui/EmptyState'
+import { ClientFilter } from '@/components/ui/ClientFilter'
 import Link from 'next/link'
 import { Play } from 'lucide-react'
 import { formatDateTime, formatDuration, formatRelativeTime } from '@/lib/utils'
@@ -12,11 +13,24 @@ export const dynamic = 'force-dynamic'
 export default async function RunsPage({
   searchParams,
 }: {
-  searchParams: { status?: string; bot_id?: string }
+  searchParams: { status?: string; bot_id?: string; clientId?: string }
 }) {
   const supabase = await createClient()
+  // eslint-disable-next-line
+  const svc: any = supabase
+
   const filterStatus = searchParams.status
   const filterBotId = searchParams.bot_id
+  const filterClientId = searchParams.clientId
+
+  const { data: clientsData } = await svc.from('clients').select('id, name').order('name')
+  const allClients: { id: string; name: string }[] = clientsData ?? []
+
+  let clientBotIds: string[] | null = null
+  if (filterClientId) {
+    const { data: botRows } = await svc.from('bots').select('id').eq('client_id', filterClientId)
+    clientBotIds = (botRows ?? []).map((b: { id: string }) => b.id)
+  }
 
   let query = supabase
     .from('runs')
@@ -26,6 +40,9 @@ export default async function RunsPage({
 
   if (filterStatus) query = query.eq('status', filterStatus)
   if (filterBotId) query = query.eq('bot_id', filterBotId)
+  if (clientBotIds !== null) {
+    query = query.in('bot_id', clientBotIds.length > 0 ? clientBotIds : [''])
+  }
 
   const { data: rawRuns } = await query
   type RawRunWithBot = import('@/types').Run & { bots: import('@/types').BotWithClient }
@@ -33,12 +50,20 @@ export default async function RunsPage({
     (r) => ({ ...r, bot: r.bots })
   )
 
+  function tabHref(status: string | undefined) {
+    const params = new URLSearchParams()
+    if (status) params.set('status', status)
+    if (filterClientId) params.set('clientId', filterClientId)
+    const qs = params.toString()
+    return qs ? `/runs?${qs}` : '/runs'
+  }
+
   return (
     <div className="flex flex-col h-full overflow-hidden">
       <Header title="Runs" subtitle="Complete history of all bot execution instances" />
 
-      {/* Status filter tabs */}
-      <div className="px-6 pt-4 flex items-center gap-2 border-b border-default pb-3">
+      {/* Filter bar */}
+      <div className="px-6 pt-4 flex items-center gap-2 border-b border-default pb-3 flex-wrap">
         {[
           { label: 'All', value: undefined },
           { label: 'Running', value: 'started' },
@@ -49,7 +74,7 @@ export default async function RunsPage({
         ].map((tab) => (
           <Link
             key={tab.label}
-            href={tab.value ? `/runs?status=${tab.value}` : '/runs'}
+            href={tabHref(tab.value)}
             className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
               filterStatus === tab.value
                 ? 'bg-blue-600 text-white'
@@ -59,6 +84,9 @@ export default async function RunsPage({
             {tab.label}
           </Link>
         ))}
+        <div className="ml-auto">
+          <ClientFilter clients={allClients} selectedId={filterClientId ?? 'all'} />
+        </div>
       </div>
 
       <div className="flex-1 overflow-auto p-6">
