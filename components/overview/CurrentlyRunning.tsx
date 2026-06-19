@@ -38,7 +38,7 @@ export function CurrentlyRunning({ runs }: CurrentlyRunningProps) {
                   <span className="text-sm font-medium text-primary truncate">{run.bot.bot_name}</span>
                   <span className="text-[10px] text-muted shrink-0 ml-2">{formatRelativeTime(run.started_at)}</span>
                 </div>
-                <div className="text-[10px] text-muted mb-2">{run.bot.client_name} · {run.vm_name ?? '—'}</div>
+                <div className="text-[10px] text-muted mb-2">{run.bot.clients?.name ?? '—'} · {run.vm_name ?? '—'}</div>
                 <div className="flex items-center gap-2">
                   <div className="flex-1 h-1.5 bg-slate-100 dark:bg-slate-700 rounded-full overflow-hidden">
                     <div

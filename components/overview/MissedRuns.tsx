@@ -30,7 +30,7 @@ export function MissedRuns({ missed }: MissedRunsProps) {
                 <span className="text-sm font-medium text-primary truncate">{run.bot.bot_name}</span>
                 <span className="text-[10px] text-muted shrink-0 ml-2">{formatRelativeTime(run.started_at)}</span>
               </div>
-              <div className="text-[10px] text-muted">{run.bot.client_name}</div>
+              <div className="text-[10px] text-muted">{run.bot.clients?.name ?? '—'}</div>
               <div className="text-[10px] text-purple-500 dark:text-purple-400 mt-0.5">
                 Expected at {new Date(run.started_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} UTC
               </div>

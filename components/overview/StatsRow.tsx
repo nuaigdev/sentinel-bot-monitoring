@@ -5,9 +5,10 @@ import { HealthGauge } from './HealthGauge'
 
 interface StatsRowProps {
   stats: OverviewStats
+  periodLabel?: string
 }
 
-export function StatsRow({ stats }: StatsRowProps) {
+export function StatsRow({ stats, periodLabel = '24h' }: StatsRowProps) {
   const statItems = [
     {
       icon: Bot, label: 'Total Bots', value: stats.total_bots,
@@ -20,17 +21,17 @@ export function StatsRow({ stats }: StatsRowProps) {
       alert: false, pulse: stats.currently_running > 0,
     },
     {
-      icon: XCircle, label: 'Failed (24h)', value: stats.failed_24h,
+      icon: XCircle, label: `Failed (${periodLabel})`, value: stats.failed_24h,
       sub: `${stats.missed_24h} missed`, color: 'text-red-500', bg: 'bg-red-500/10',
       alert: stats.failed_24h > 0 || stats.missed_24h > 0, pulse: false,
     },
     {
-      icon: CheckCircle2, label: 'Passed (24h)', value: stats.passed_24h,
+      icon: CheckCircle2, label: `Passed (${periodLabel})`, value: stats.passed_24h,
       sub: 'successful', color: 'text-green-500', bg: 'bg-green-500/10',
       alert: false, pulse: false,
     },
     {
-      icon: Clock, label: 'Timeouts (24h)', value: stats.timeouts_24h,
+      icon: Clock, label: `Timeouts (${periodLabel})`, value: stats.timeouts_24h,
       sub: 'timed out', color: 'text-orange-500', bg: 'bg-orange-500/10',
       alert: stats.timeouts_24h > 0, pulse: false,
     },
@@ -44,7 +45,7 @@ export function StatsRow({ stats }: StatsRowProps) {
         <div>
           <div className="text-[10px] text-slate-400 uppercase tracking-widest mb-1">Automation Health</div>
           <div className="text-3xl font-bold text-white leading-none">{stats.health_score}%</div>
-          <div className="text-xs text-slate-500 mt-1.5">{stats.passed_24h} successful runs (24h)</div>
+          <div className="text-xs text-slate-500 mt-1.5">{stats.passed_24h} successful runs ({periodLabel})</div>
           <div className={cn('flex items-center gap-1 text-xs mt-1.5', stats.health_score >= 90 ? 'text-green-400' : 'text-orange-400')}>
             {stats.health_score >= 90 ? <TrendingUp size={12} /> : <TrendingDown size={12} />}
             {stats.health_score >= 90 ? 'Healthy' : 'Needs attention'}

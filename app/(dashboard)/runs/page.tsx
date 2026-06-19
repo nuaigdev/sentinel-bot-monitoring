@@ -20,7 +20,7 @@ export default async function RunsPage({
 
   let query = supabase
     .from('runs')
-    .select('*, bots!inner(*)')
+    .select('*, bots!inner(*, clients(id, name))')
     .order('started_at', { ascending: false })
     .limit(100)
 
@@ -28,7 +28,7 @@ export default async function RunsPage({
   if (filterBotId) query = query.eq('bot_id', filterBotId)
 
   const { data: rawRuns } = await query
-  type RawRunWithBot = import('@/types').Run & { bots: import('@/types').Bot }
+  type RawRunWithBot = import('@/types').Run & { bots: import('@/types').BotWithClient }
   const allRuns: RunWithBot[] = ((rawRuns ?? []) as unknown as RawRunWithBot[]).map(
     (r) => ({ ...r, bot: r.bots })
   )
@@ -87,7 +87,7 @@ export default async function RunsPage({
                   <tr key={run.id}>
                     <td className="whitespace-nowrap">
                       <div className="font-medium text-primary text-sm">{run.bot.bot_name}</div>
-                      <div className="text-[11px] text-muted">{run.bot.client_name}</div>
+                      <div className="text-[11px] text-muted">{run.bot.clients?.name ?? '—'}</div>
                     </td>
                     <td className="whitespace-nowrap"><StatusBadge status={run.status} /></td>
                     <td className="whitespace-nowrap text-xs text-secondary">

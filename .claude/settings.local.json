@@ -21,7 +21,11 @@
       "Bash(git push *)",
       "Bash(New-Item -ItemType Directory -Force \"C:\\\\programming\\\\RD\\\\sentinel\\\\sentinel-bot-monitoring\\\\app\\\\api\\\\incidents\\\\[runId]\\\\acknowledge\")",
       "Bash(Out-Null)",
-      "PowerShell(New-Item *)"
+      "PowerShell(New-Item *)",
+      "Bash(Get-ChildItem -Path \"C:\\\\programming\\\\RD\\\\sentinel\\\\sentinel-bot-monitoring\" -Recurse -Directory)",
+      "Bash(Select-Object -ExpandProperty FullName)",
+      "Bash(Sort-Object)",
+      "Bash(Get-ChildItem -Path \"C:\\\\programming\\\\RD\\\\sentinel\\\\sentinel-bot-monitoring\" -File -Recurse)"
     ]
   }
 }

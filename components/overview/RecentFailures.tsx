@@ -30,7 +30,7 @@ export function RecentFailures({ failures }: RecentFailuresProps) {
                 <span className="text-sm font-medium text-primary truncate">{run.bot.bot_name}</span>
                 <span className="text-[10px] text-muted shrink-0 ml-2">{formatRelativeTime(run.started_at)}</span>
               </div>
-              <div className="text-[10px] text-muted mb-1">{run.bot.client_name}</div>
+              <div className="text-[10px] text-muted mb-1">{run.bot.clients?.name ?? '—'}</div>
               {run.summary_message && (
                 <div className="text-[11px] text-red-500 dark:text-red-400 truncate">{run.summary_message}</div>
               )}

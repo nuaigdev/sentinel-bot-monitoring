@@ -8,7 +8,7 @@ import {
   Play, Info, AlertCircle, Zap, Timer, Server, Hash,
 } from 'lucide-react'
 import { formatDateTime, formatDuration, cn } from '@/lib/utils'
-import type { Run, RunLog, Bot } from '@/types'
+import type { Run, RunLog, BotWithClient } from '@/types'
 import { format, parseISO } from 'date-fns'
 
 export const dynamic = 'force-dynamic'
@@ -29,7 +29,7 @@ export default async function RunDetailPage({ params }: { params: { id: string }
 
   const { data: rawRun } = await supabase
     .from('runs')
-    .select('*, bots!inner(*), run_logs(*)')
+    .select('*, bots!inner(*, clients(id, name)), run_logs(*)')
     .eq('id', params.id)
     .single()
 
@@ -37,7 +37,7 @@ export default async function RunDetailPage({ params }: { params: { id: string }
 
   // eslint-disable-next-line
   const run = rawRun as any
-  const bot = run.bots as Bot
+  const bot = run.bots as BotWithClient
   const logs = ((run.run_logs ?? []) as RunLog[]).sort(
     (a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()
   )
@@ -65,7 +65,7 @@ export default async function RunDetailPage({ params }: { params: { id: string }
     <div className="flex flex-col h-full overflow-hidden">
       <Header
         title={`Run Detail`}
-        subtitle={`${bot.bot_name} · ${bot.client_name}`}
+        subtitle={`${bot.bot_name} · ${bot.clients?.name ?? '—'}`}
       >
         <Link href="/runs" className="btn-secondary">
           <ArrowLeft size={14} /> All Runs
@@ -90,7 +90,7 @@ export default async function RunDetailPage({ params }: { params: { id: string }
                   <span className="text-xs text-muted font-mono">{run.id.slice(0, 8)}…</span>
                 </div>
                 <h2 className="text-lg font-bold text-primary">{bot.bot_name}</h2>
-                <p className="text-sm text-muted">{bot.client_name}</p>
+                <p className="text-sm text-muted">{bot.clients?.name ?? '—'}</p>
               </div>
             </div>
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-x-8 gap-y-3 text-right">

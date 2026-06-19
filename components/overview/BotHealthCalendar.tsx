@@ -45,7 +45,7 @@ export function BotHealthCalendar({ rows }: BotHealthCalendarProps) {
               <Link
                 href={`/bots/${bot.id}`}
                 className="w-40 shrink-0 text-xs text-primary hover:text-blue-500 transition-colors truncate"
-                title={`${bot.client_name} / ${bot.bot_name}`}
+                title={`${bot.clients?.name ?? '—'} / ${bot.bot_name}`}
               >
                 {bot.bot_name}
               </Link>

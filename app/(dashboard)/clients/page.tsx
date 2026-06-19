@@ -45,31 +45,38 @@ export default function ClientsPage() {
   const [deletingId, setDeletingId] = useState<string | null>(null)
 
   const loadData = useCallback(async () => {
-    const supabase = createClient()
+    // eslint-disable-next-line
+    const svc: any = createClient()
     setLoading(true)
     try {
       const [{ data: rawClients }, { data: rawBots }, { data: rawLastRuns }, { data: rawRunning }] =
         await Promise.all([
-          supabase.from('clients').select('id, name, created_at').order('name'),
-          supabase.from('bots').select('id, client_id, bot_name, is_active, bot_type').order('bot_name'),
-          supabase.from('runs')
-            .select('bot_id, status, started_at')
-            .neq('status', 'started')
-            .order('started_at', { ascending: false }),
-          supabase.from('runs').select('bot_id').eq('status', 'started'),
+          svc.from('clients').select('id, name, created_at').order('name'),
+          svc.from('bots').select('id, client_id, bot_name, is_active, bot_type').order('bot_name'),
+          svc.from('runs').select('bot_id, status, started_at').neq('status', 'started').order('started_at', { ascending: false }),
+          svc.from('runs').select('bot_id').eq('status', 'started'),
         ])
 
-      const lastRunByBot: Record<string, { status: string; started_at: string }> = {}
-      for (const r of (rawLastRuns ?? []) as { bot_id: string; status: string; started_at: string }[]) {
+      type BotRaw = { id: string; client_id: string | null; bot_name: string; is_active: boolean; bot_type: 'cloud' | 'desktop' }
+      type LastRunRaw = { bot_id: string; status: string; started_at: string }
+      type RunningRaw = { bot_id: string }
+
+      const clients2 = (rawClients ?? []) as ClientData[]
+      const bots2 = (rawBots ?? []) as BotRaw[]
+      const lastRuns = (rawLastRuns ?? []) as LastRunRaw[]
+      const runningList = (rawRunning ?? []) as RunningRaw[]
+
+      const lastRunByBot: Record<string, LastRunRaw> = {}
+      for (const r of lastRuns) {
         if (!lastRunByBot[r.bot_id]) lastRunByBot[r.bot_id] = r
       }
 
-      const runningBotIds = new Set((rawRunning ?? []).map((r: { bot_id: string }) => r.bot_id))
+      const runningBotIds = new Set(runningList.map((r) => r.bot_id))
 
-      const enrichedClients: ClientWithBotRows[] = (rawClients ?? []).map((c) => {
-        const bots: BotRow[] = (rawBots ?? [])
-          .filter((b: { client_id: string | null }) => b.client_id === c.id)
-          .map((b: { id: string; bot_name: string; is_active: boolean; bot_type: 'cloud' | 'desktop' }) => ({
+      const enrichedClients: ClientWithBotRows[] = clients2.map((c) => {
+        const bots: BotRow[] = bots2
+          .filter((b) => b.client_id === c.id)
+          .map((b) => ({
             id: b.id,
             bot_name: b.bot_name,
             is_active: b.is_active,
@@ -78,7 +85,7 @@ export default function ClientsPage() {
             last_run_at: lastRunByBot[b.id]?.started_at ?? null,
             is_running: runningBotIds.has(b.id),
           }))
-        return { ...c, bots }
+        return { id: c.id, name: c.name, created_at: c.created_at, bots }
       })
 
       setClients(enrichedClients)
@@ -121,8 +128,9 @@ export default function ClientsPage() {
     if (!name) return
     setSavingEdit(true)
     try {
-      const supabase = createClient()
-      const { error } = await supabase.from('clients').update({ name }).eq('id', id)
+      // eslint-disable-next-line
+      const svc: any = createClient()
+      const { error } = await svc.from('clients').update({ name }).eq('id', id)
       if (error) { alert(error.message); return }
       setEditingId(null)
       loadData()
@@ -139,19 +147,15 @@ export default function ClientsPage() {
     if (!confirm(`Delete client "${name}"?`)) return
     setDeletingId(id)
     try {
-      const supabase = createClient()
-      const { error } = await supabase.from('clients').delete().eq('id', id)
+      // eslint-disable-next-line
+      const svc: any = createClient()
+      const { error } = await svc.from('clients').delete().eq('id', id)
       if (error) { alert(error.message); return }
       loadData()
     } finally {
       setDeletingId(null)
     }
   }
-
-  const unassigned = clients.length === 0 ? [] : (() => {
-    const supabase = createClient()
-    return []
-  })()
 
   const totalBots = clients.reduce((acc, c) => acc + c.bots.length, 0)
 

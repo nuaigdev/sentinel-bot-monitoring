@@ -6,14 +6,14 @@ import Link from 'next/link'
 import { AlertTriangle, CheckCircle2 } from 'lucide-react'
 import { formatDateTime, formatRelativeTime, formatDuration } from '@/lib/utils'
 import { AcknowledgeButton } from '@/components/incidents/AcknowledgeButton'
-import type { Run, Bot } from '@/types'
+import type { Run, BotWithClient } from '@/types'
 
 export const dynamic = 'force-dynamic'
 
-type RawRunWithBot = Run & { bots: Bot }
+type RawRunWithBot = Run & { bots: BotWithClient }
 
 interface IncidentRun extends Run {
-  bot: Bot
+  bot: BotWithClient
 }
 
 export default async function IncidentsPage() {
@@ -23,7 +23,7 @@ export default async function IncidentsPage() {
 
   const { data: rawRuns } = await supabase
     .from('runs')
-    .select('*, bots!inner(*)')
+    .select('*, bots!inner(*, clients(id, name))')
     .in('status', ['failure', 'timeout', 'missed'])
     .gte('started_at', h48ago)
     .order('started_at', { ascending: false })
@@ -131,7 +131,7 @@ function IncidentTable({
                   {run.bot.bot_name}
                 </Link>
               </td>
-              <td className="text-secondary">{run.bot.client_name}</td>
+              <td className="text-secondary">{run.bot.clients?.name ?? '—'}</td>
               <td><StatusBadge status={run.status} /></td>
               <td className="text-secondary text-xs">
                 <div>{formatDateTime(run.started_at)}</div>
