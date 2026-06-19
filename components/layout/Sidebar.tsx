@@ -15,6 +15,7 @@ import {
   ChevronRight,
   ChevronUp,
   BookOpen,
+  Building2,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { createClient } from '@/lib/supabase/client'
@@ -22,6 +23,7 @@ import { useRouter } from 'next/navigation'
 
 const navItems = [
   { label: 'Overview',  href: '/overview',  icon: LayoutDashboard },
+  { label: 'Clients',   href: '/clients',   icon: Building2 },
   { label: 'Bots',      href: '/bots',      icon: Bot },
   { label: 'Runs',      href: '/runs',      icon: Play },
   { label: 'Incidents', href: '/incidents', icon: AlertTriangle },
