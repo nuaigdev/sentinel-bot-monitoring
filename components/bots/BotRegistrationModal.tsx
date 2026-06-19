@@ -11,9 +11,13 @@ interface BotFormData {
   bot_type: 'cloud' | 'desktop'
   owner_email: string
   description: string
-  schedule_type: 'cron' | 'fixed_times' | 'manual'
+  schedule_type: 'cron' | 'fixed_times' | 'manual' | 'weekly' | 'monthly' | 'annually'
   schedule_cron: string
   schedule_fixed_times: string
+  schedule_days_of_week: string
+  schedule_day_of_month: number
+  schedule_month: number
+  schedule_time: string
   time_allocated_secs: number
   missed_grace_secs: number
   allow_concurrent_runs: boolean
@@ -28,10 +32,29 @@ const emptyForm: BotFormData = {
   schedule_type: 'manual',
   schedule_cron: '',
   schedule_fixed_times: '',
+  schedule_days_of_week: '',
+  schedule_day_of_month: 1,
+  schedule_month: 1,
+  schedule_time: '09:00',
   time_allocated_secs: 3600,
   missed_grace_secs: 300,
   allow_concurrent_runs: false,
 }
+
+const WEEK_DAYS = [
+  { iso: 1, label: 'Mon' },
+  { iso: 2, label: 'Tue' },
+  { iso: 3, label: 'Wed' },
+  { iso: 4, label: 'Thu' },
+  { iso: 5, label: 'Fri' },
+  { iso: 6, label: 'Sat' },
+  { iso: 7, label: 'Sun' },
+]
+
+const MONTHS = [
+  'January', 'February', 'March', 'April', 'May', 'June',
+  'July', 'August', 'September', 'October', 'November', 'December',
+]
 
 interface ClientOption { id: string; name: string }
 
@@ -66,6 +89,20 @@ export function BotRegistrationModal({ open, onClose, onSuccess }: BotRegistrati
   const update = (field: keyof BotFormData, value: string | number | boolean) => {
     setForm((f) => ({ ...f, [field]: value }))
   }
+
+  const toggleDay = (iso: number) => {
+    const current = form.schedule_days_of_week
+      ? form.schedule_days_of_week.split(',').map(Number).filter(Boolean)
+      : []
+    const next = current.includes(iso)
+      ? current.filter((d) => d !== iso)
+      : [...current, iso].sort((a, b) => a - b)
+    update('schedule_days_of_week', next.join(','))
+  }
+
+  const selectedDays = form.schedule_days_of_week
+    ? form.schedule_days_of_week.split(',').map(Number).filter(Boolean)
+    : []
 
   const handleCreateClient = async () => {
     const name = newClientName.trim()
@@ -281,7 +318,10 @@ export function BotRegistrationModal({ open, onClose, onSuccess }: BotRegistrati
               <select className="input-field" value={form.schedule_type} onChange={(e) => update('schedule_type', e.target.value)}>
                 <option value="manual">Manual (no schedule)</option>
                 <option value="cron">Cron</option>
-                <option value="fixed_times">Fixed Times (UTC)</option>
+                <option value="fixed_times">Fixed Times (daily, UTC)</option>
+                <option value="weekly">Weekly</option>
+                <option value="monthly">Monthly</option>
+                <option value="annually">Annually</option>
               </select>
             </div>
             {form.schedule_type === 'cron' && (
@@ -307,6 +347,111 @@ export function BotRegistrationModal({ open, onClose, onSuccess }: BotRegistrati
               </div>
             )}
           </div>
+
+          {/* Weekly schedule */}
+          {form.schedule_type === 'weekly' && (
+            <div className="grid grid-cols-3 gap-4">
+              <div className="col-span-2">
+                <label className="block text-xs font-medium text-muted mb-1.5">Days of Week *</label>
+                <div className="flex gap-1">
+                  {WEEK_DAYS.map((d) => (
+                    <button
+                      key={d.iso}
+                      type="button"
+                      onClick={() => toggleDay(d.iso)}
+                      className={cn(
+                        'px-2.5 py-1 rounded text-xs font-medium border transition-colors',
+                        selectedDays.includes(d.iso)
+                          ? 'bg-blue-600 text-white border-blue-600'
+                          : 'border-default text-muted hover:border-blue-500/50 hover:text-primary'
+                      )}
+                    >
+                      {d.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-muted mb-1">Time (UTC) *</label>
+                <input
+                  className="input-field"
+                  type="time"
+                  value={form.schedule_time}
+                  onChange={(e) => update('schedule_time', e.target.value)}
+                  required
+                />
+              </div>
+            </div>
+          )}
+
+          {/* Monthly schedule */}
+          {form.schedule_type === 'monthly' && (
+            <div className="grid grid-cols-3 gap-4">
+              <div>
+                <label className="block text-xs font-medium text-muted mb-1">Day of Month *</label>
+                <input
+                  className="input-field"
+                  type="number"
+                  min={1}
+                  max={31}
+                  value={form.schedule_day_of_month}
+                  onChange={(e) => update('schedule_day_of_month', parseInt(e.target.value))}
+                  required
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-muted mb-1">Time (UTC) *</label>
+                <input
+                  className="input-field"
+                  type="time"
+                  value={form.schedule_time}
+                  onChange={(e) => update('schedule_time', e.target.value)}
+                  required
+                />
+              </div>
+            </div>
+          )}
+
+          {/* Annually schedule */}
+          {form.schedule_type === 'annually' && (
+            <div className="grid grid-cols-3 gap-4">
+              <div>
+                <label className="block text-xs font-medium text-muted mb-1">Month *</label>
+                <select
+                  className="input-field"
+                  value={form.schedule_month}
+                  onChange={(e) => update('schedule_month', parseInt(e.target.value))}
+                  required
+                >
+                  {MONTHS.map((name, i) => (
+                    <option key={i + 1} value={i + 1}>{name}</option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-muted mb-1">Day *</label>
+                <input
+                  className="input-field"
+                  type="number"
+                  min={1}
+                  max={31}
+                  value={form.schedule_day_of_month}
+                  onChange={(e) => update('schedule_day_of_month', parseInt(e.target.value))}
+                  required
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-muted mb-1">Time (UTC) *</label>
+                <input
+                  className="input-field"
+                  type="time"
+                  value={form.schedule_time}
+                  onChange={(e) => update('schedule_time', e.target.value)}
+                  required
+                />
+              </div>
+            </div>
+          )}
 
           <div className="grid grid-cols-2 gap-4">
             <div>

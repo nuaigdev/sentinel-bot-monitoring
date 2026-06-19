@@ -39,7 +39,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'bot_type must be cloud or desktop' }, { status: 400 })
   }
 
-  if (!['cron', 'fixed_times', 'manual'].includes(body.schedule_type as string)) {
+  if (!['cron', 'fixed_times', 'manual', 'weekly', 'monthly', 'annually'].includes(body.schedule_type as string)) {
     return NextResponse.json({ error: 'Invalid schedule_type' }, { status: 400 })
   }
 
@@ -55,9 +55,13 @@ export async function POST(request: NextRequest) {
       owner_email: body.owner_email as string,
       description: (body.description as string) ?? null,
       tags: (body.tags as string[]) ?? [],
-      schedule_type: body.schedule_type as 'cron' | 'fixed_times' | 'manual',
+      schedule_type: body.schedule_type as 'cron' | 'fixed_times' | 'manual' | 'weekly' | 'monthly' | 'annually',
       schedule_cron: (body.schedule_cron as string) ?? null,
       schedule_fixed_times: (body.schedule_fixed_times as string) ?? null,
+      schedule_days_of_week: (body.schedule_days_of_week as string) ?? null,
+      schedule_day_of_month: (body.schedule_day_of_month as number) ?? null,
+      schedule_month: (body.schedule_month as number) ?? null,
+      schedule_time: (body.schedule_time as string) ?? null,
       time_allocated_secs: (body.time_allocated_secs as number) ?? 3600,
       missed_grace_secs: (body.missed_grace_secs as number) ?? 300,
       allow_concurrent_runs: (body.allow_concurrent_runs as boolean) ?? false,

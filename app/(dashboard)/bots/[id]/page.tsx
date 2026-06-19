@@ -103,6 +103,36 @@ export default async function BotDetailPage({ params }: { params: { id: string }
                 <div className="text-primary text-xs">{bot.schedule_fixed_times}</div>
               </div>
             )}
+            {bot.schedule_days_of_week && (
+              <div>
+                <div className="text-xs text-muted mb-1">Days of Week</div>
+                <div className="text-primary text-xs">
+                  {bot.schedule_days_of_week.split(',').map((d) =>
+                    ['', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'][Number(d)] ?? d
+                  ).join(', ')}
+                </div>
+              </div>
+            )}
+            {bot.schedule_day_of_month != null && (
+              <div>
+                <div className="text-xs text-muted mb-1">Day of Month</div>
+                <div className="text-primary">{bot.schedule_day_of_month}</div>
+              </div>
+            )}
+            {bot.schedule_month != null && (
+              <div>
+                <div className="text-xs text-muted mb-1">Month</div>
+                <div className="text-primary">
+                  {['', 'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'][bot.schedule_month]}
+                </div>
+              </div>
+            )}
+            {bot.schedule_time && (
+              <div>
+                <div className="text-xs text-muted mb-1">Time (UTC)</div>
+                <code className="text-xs font-mono text-primary">{bot.schedule_time}</code>
+              </div>
+            )}
             <div>
               <div className="text-xs text-muted mb-1">Grace Period</div>
               <div className="text-primary">{bot.missed_grace_secs}s</div>

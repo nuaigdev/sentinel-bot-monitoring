@@ -52,7 +52,7 @@ export async function sweepMissedRuns(supabase: DB): Promise<number> {
 
   const { data: bots } = await supabase
     .from('bots')
-    .select('id, schedule_type, schedule_cron, schedule_fixed_times, missed_grace_secs, created_at')
+    .select('id, schedule_type, schedule_cron, schedule_fixed_times, schedule_days_of_week, schedule_day_of_month, schedule_month, schedule_time, missed_grace_secs, created_at')
     .eq('is_active', true)
     .neq('schedule_type', 'manual')
 
@@ -117,7 +117,16 @@ export async function sweepMissedRuns(supabase: DB): Promise<number> {
 }
 
 function computeExpectedStartTimes(
-  bot: { schedule_type: string; schedule_cron: string | null; schedule_fixed_times: string | null; missed_grace_secs: number },
+  bot: {
+    schedule_type: string
+    schedule_cron: string | null
+    schedule_fixed_times: string | null
+    schedule_days_of_week: string | null
+    schedule_day_of_month: number | null
+    schedule_month: number | null
+    schedule_time: string | null
+    missed_grace_secs: number
+  },
   from: Date,
   to: Date
 ): Date[] {
@@ -133,11 +142,51 @@ function computeExpectedStartTimes(
         const [h, m] = time.split(':').map(Number)
         const candidate = new Date(cursor)
         candidate.setUTCHours(h, m, 0, 0)
-        if (candidate >= from && candidate <= to) {
-          results.push(candidate)
-        }
+        if (candidate >= from && candidate <= to) results.push(candidate)
       }
       cursor.setUTCDate(cursor.getUTCDate() + 1)
+    }
+  }
+
+  if (bot.schedule_type === 'weekly' && bot.schedule_days_of_week && bot.schedule_time) {
+    const days = bot.schedule_days_of_week.split(',').map(Number).filter(Boolean)
+    const [h, m] = bot.schedule_time.split(':').map(Number)
+    const cursor = new Date(from)
+    cursor.setUTCHours(0, 0, 0, 0)
+
+    while (cursor <= to) {
+      // Convert JS getUTCDay() (0=Sun…6=Sat) → ISO (1=Mon…7=Sun)
+      const isoDay = cursor.getUTCDay() === 0 ? 7 : cursor.getUTCDay()
+      if (days.includes(isoDay)) {
+        const candidate = new Date(cursor)
+        candidate.setUTCHours(h, m, 0, 0)
+        if (candidate >= from && candidate <= to) results.push(candidate)
+      }
+      cursor.setUTCDate(cursor.getUTCDate() + 1)
+    }
+  }
+
+  if (bot.schedule_type === 'monthly' && bot.schedule_day_of_month && bot.schedule_time) {
+    const [h, m] = bot.schedule_time.split(':').map(Number)
+    const cursor = new Date(Date.UTC(from.getUTCFullYear(), from.getUTCMonth(), 1))
+
+    while (cursor <= to) {
+      const daysInMonth = new Date(Date.UTC(cursor.getUTCFullYear(), cursor.getUTCMonth() + 1, 0)).getUTCDate()
+      const day = Math.min(bot.schedule_day_of_month, daysInMonth)
+      const candidate = new Date(Date.UTC(cursor.getUTCFullYear(), cursor.getUTCMonth(), day, h, m, 0))
+      if (candidate >= from && candidate <= to) results.push(candidate)
+      cursor.setUTCMonth(cursor.getUTCMonth() + 1)
+    }
+  }
+
+  if (bot.schedule_type === 'annually' && bot.schedule_month && bot.schedule_day_of_month && bot.schedule_time) {
+    const [h, m] = bot.schedule_time.split(':').map(Number)
+    for (let year = from.getUTCFullYear(); ; year++) {
+      const daysInMonth = new Date(Date.UTC(year, bot.schedule_month, 0)).getUTCDate()
+      const day = Math.min(bot.schedule_day_of_month, daysInMonth)
+      const candidate = new Date(Date.UTC(year, bot.schedule_month - 1, day, h, m, 0))
+      if (candidate > to) break
+      if (candidate >= from) results.push(candidate)
     }
   }
 
