@@ -35,7 +35,7 @@ export async function DELETE(_req: NextRequest, { params }: { params: { id: stri
 
   // eslint-disable-next-line
   const svc: any = createServiceRoleClient()
-  const { error } = await svc.from('bots').update({ is_active: false }).eq('id', params.id)
+  const { error } = await svc.from('bots').delete().eq('id', params.id)
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
   return NextResponse.json({ ok: true })
 }

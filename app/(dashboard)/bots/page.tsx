@@ -10,7 +10,7 @@ import { PageLoader } from '@/components/ui/Spinner'
 import { createClient } from '@/lib/supabase/client'
 import {
   Bot, Plus, Download, Search, ChevronLeft, ChevronRight,
-  CheckCircle2, XCircle, Play, AlertCircle
+  CheckCircle2, XCircle, Play, AlertCircle, Trash2
 } from 'lucide-react'
 import type { BotWithStats, Run } from '@/types'
 import { formatRelativeTime, formatAllocatedTime, formatDate, cn } from '@/lib/utils'
@@ -31,6 +31,8 @@ export default function BotsPage() {
   const [page, setPage] = useState(0)
   const [total, setTotal] = useState(0)
   const [clients, setClients] = useState<{ id: string; name: string }[]>([])
+  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null)
+  const [deleting, setDeleting] = useState(false)
 
   useEffect(() => {
     createClient()
@@ -125,6 +127,23 @@ export default function BotsPage() {
   }, [search, filterClientId, filterType, filterStatus, page])
 
   useEffect(() => { loadBots() }, [loadBots])
+
+  async function handleDelete(botId: string) {
+    setDeleting(true)
+    try {
+      const res = await fetch(`/api/v1/bots/${botId}`, { method: 'DELETE' })
+      if (res.ok) {
+        setConfirmDeleteId(null)
+        if (selectedBotId === botId) {
+          setSelectedBotId(null)
+          setSelectedBotName(null)
+        }
+        loadBots()
+      }
+    } finally {
+      setDeleting(false)
+    }
+  }
 
   const totalPages = Math.ceil(total / PAGE_SIZE)
 
@@ -238,6 +257,7 @@ export default function BotsPage() {
                     <th>Success Rate</th>
                     <th>Last Run</th>
                     <th>Next Run</th>
+                    <th></th>
                   </tr>
                 </thead>
                 <tbody>
@@ -300,6 +320,32 @@ export default function BotsPage() {
                         </td>
                         <td className="text-secondary text-xs">
                           {bot.schedule_type === 'manual' ? <span className="text-muted">Manual</span> : '—'}
+                        </td>
+                        <td onClick={(e) => e.stopPropagation()}>
+                          {confirmDeleteId === bot.id ? (
+                            <div className="flex items-center gap-1.5">
+                              <button
+                                onClick={() => handleDelete(bot.id)}
+                                disabled={deleting}
+                                className="text-xs font-medium text-red-500 hover:text-red-700 disabled:opacity-50"
+                              >
+                                {deleting ? '…' : 'Delete'}
+                              </button>
+                              <button
+                                onClick={() => setConfirmDeleteId(null)}
+                                className="text-xs text-muted hover:text-primary"
+                              >
+                                Cancel
+                              </button>
+                            </div>
+                          ) : (
+                            <button
+                              onClick={() => setConfirmDeleteId(bot.id)}
+                              className="p-1 rounded text-muted hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
+                            >
+                              <Trash2 size={14} />
+                            </button>
+                          )}
                         </td>
                       </tr>
                     )

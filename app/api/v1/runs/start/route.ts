@@ -1,21 +1,21 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { authenticateBotKey } from '@/lib/api-auth'
 
-export async function POST(request: NextRequest) {
+export async function GET(request: NextRequest) {
   const authResult = await authenticateBotKey(request)
   if (authResult instanceof NextResponse) return authResult
 
   const { bot, svc } = authResult
+  const sp = request.nextUrl.searchParams
+  const vm_name = sp.get('vm_name') ?? null
+  const client_run_id = sp.get('client_run_id') ?? null
 
-  let body: { vm_name?: string; client_run_id?: string } = {}
-  try { body = await request.json() } catch {}
-
-  if (body.client_run_id) {
+  if (client_run_id) {
     const { data: existing } = await svc
       .from('runs')
       .select('id, status')
       .eq('bot_id', bot.bot_id)
-      .eq('client_run_id', body.client_run_id)
+      .eq('client_run_id', client_run_id)
       .single()
 
     if (existing) {
@@ -42,10 +42,10 @@ export async function POST(request: NextRequest) {
     .from('runs')
     .insert({
       bot_id: bot.bot_id,
-      vm_name: body.vm_name ?? null,
+      vm_name,
       status: 'started',
       started_at: now,
-      client_run_id: body.client_run_id ?? null,
+      client_run_id,
     })
     .select('id')
     .single()
@@ -55,16 +55,13 @@ export async function POST(request: NextRequest) {
   }
 
   if (activeRun && !botConfig?.allow_concurrent_runs) {
-    return NextResponse.json(
-      {
-        run_id: newRun.id,
-        status: 'started',
-        warning: '409_concurrent_run_detected',
-        existing_run_id: activeRun.id,
-      },
-      { status: 201 }
-    )
+    return NextResponse.json({
+      run_id: newRun.id,
+      status: 'started',
+      warning: '409_concurrent_run_detected',
+      existing_run_id: activeRun.id,
+    })
   }
 
-  return NextResponse.json({ run_id: newRun.id, status: 'started' }, { status: 201 })
+  return NextResponse.json({ run_id: newRun.id, status: 'started' })
 }
