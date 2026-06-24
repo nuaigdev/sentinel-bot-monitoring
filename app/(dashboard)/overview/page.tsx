@@ -77,13 +77,13 @@ async function fetchOverviewData(scope: TimeScope, offset: number, clientId: str
   const { data: rawStartedRuns } = await startedQ
   const startedRuns = (rawStartedRuns ?? []) as unknown as RawRunWithBot[]
 
-  // Activity feed (30 days, most recent first)
+  // Activity feed (30 days, most recent 5)
   let recentQ = supabase
     .from('runs')
     .select('*, bots!inner(*, clients(id, name))')
     .gte('started_at', d30ago)
     .order('started_at', { ascending: false })
-    .limit(50)
+    .limit(5)
   recentQ = applyBotFilter(recentQ as Parameters<typeof applyBotFilter>[0]) as typeof recentQ
   const { data: rawRecentRuns } = await recentQ
   const recentRuns = (rawRecentRuns ?? []) as unknown as RawRunWithBot[]
@@ -128,7 +128,7 @@ async function fetchOverviewData(scope: TimeScope, offset: number, clientId: str
     health_score: computeHealthScore(passed, totalFinished),
   }
 
-  // Activity feed (most recent 20 events)
+  // Activity feed (most recent 5 events)
   const eventMap: Record<string, string> = {
     success: 'completed successfully',
     failure: 'failed',
@@ -136,7 +136,7 @@ async function fetchOverviewData(scope: TimeScope, offset: number, clientId: str
     missed: 'missed scheduled run',
     started: 'started running',
   }
-  const activities: DashboardActivity[] = recentRuns.slice(0, 20).map((r) => ({
+  const activities: DashboardActivity[] = recentRuns.slice(0, 5).map((r) => ({
     id: r.id,
     bot_name: r.bots.bot_name,
     client_name: r.bots.clients?.name ?? '—',
