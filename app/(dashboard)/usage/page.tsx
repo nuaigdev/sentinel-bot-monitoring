@@ -395,10 +395,10 @@ x-bot-key: pa_live_...`} />
 
               <div className="space-y-2">
                 <ResponseRow status="200" description="Run ended. duration_secs is wall-clock time from start to end." />
-                <ResponseRow status="200 + already_ended: true" description="Run was already ended (timeout/missed). No change made." example='{ "ok": true, "duration_secs": 3600, "already_ended": true }' />
                 <ResponseRow status="400" description='status query param missing or not "success" / "failure".' />
-                <ResponseRow status="404" description="run_id not found." />
                 <ResponseRow status="403" description="Run belongs to a different bot." />
+                <ResponseRow status="404" description="run_id not found." />
+                <ResponseRow status="409" description="Run already ended (success, failure, timeout, or missed). Cannot end twice." example={`{ "error": "Cannot end a run with status 'success'" }`} />
               </div>
             </section>
 
@@ -422,7 +422,7 @@ x-bot-key: pa_live_...`} />
                       ['401', 'Unauthorized', 'Missing or invalid x-bot-key header'],
                       ['403', 'Forbidden', 'Bot is disabled, or run belongs to another bot'],
                       ['404', 'Not Found', 'run_id does not exist'],
-                      ['409', 'Conflict', 'Logging a checkpoint on an already-ended run'],
+                      ['409', 'Conflict', 'Logging or ending a run that has already ended'],
                       ['429', 'Too Many Requests', 'Rate limit exceeded (60 req/min)'],
                       ['500', 'Server Error', 'Database write failed — retry after a moment'],
                     ].map(([code, meaning, cause]) => (

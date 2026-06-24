@@ -26,7 +26,10 @@ export async function GET(
   if (run.bot_id !== bot.bot_id) return NextResponse.json({ error: 'Run belongs to a different bot' }, { status: 403 })
 
   if (run.status !== 'started') {
-    return NextResponse.json({ ok: true, duration_secs: run.duration_secs, already_ended: true })
+    return NextResponse.json(
+      { error: `Cannot end a run with status '${run.status}'` },
+      { status: 409 }
+    )
   }
 
   const now = new Date()
