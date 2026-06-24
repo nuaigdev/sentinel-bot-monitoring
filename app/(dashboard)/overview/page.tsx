@@ -64,12 +64,12 @@ async function fetchOverviewData(scope: TimeScope, offset: number, clientId: str
   // Period stats
   let statsQ = supabase
     .from('runs')
-    .select('status, started_at')
+    .select('status, started_at, bot_id')
     .gte('started_at', periodStart.toISOString())
     .lte('started_at', periodEnd.toISOString())
   statsQ = applyBotFilter(statsQ as Parameters<typeof applyBotFilter>[0]) as typeof statsQ
   const { data: rawRunsPeriod } = await statsQ
-  const runsPeriod = (rawRunsPeriod ?? []) as { status: string; started_at: string }[]
+  const runsPeriod = (rawRunsPeriod ?? []) as { status: string; started_at: string; bot_id: string }[]
 
   // Currently running (always real-time, not period-scoped)
   let startedQ = supabase.from('runs').select('*, bots!inner(*, clients(id, name))').eq('status', 'started')
@@ -184,8 +184,26 @@ async function fetchOverviewData(scope: TimeScope, offset: number, clientId: str
       })),
   }))
 
-  // Activity chart runs: use the selected period window
-  const activityRuns = runsPeriod.map((r) => ({ status: r.status as Run['status'], started_at: r.started_at }))
+  // Per-bot performance for the selected period
+  type BotPeriodStat = { botName: string; clientName: string; success: number; failure: number; timeout: number; missed: number; total: number }
+  const botStatMap = new Map<string, BotPeriodStat>()
+  for (const r of runsPeriod) {
+    if (r.status === 'started') continue
+    const bot = allBots.find((b) => b.id === r.bot_id)
+    if (!bot) continue
+    const entry = botStatMap.get(r.bot_id) ?? {
+      botName: bot.bot_name,
+      clientName: bot.clients?.name ?? '—',
+      success: 0, failure: 0, timeout: 0, missed: 0, total: 0,
+    }
+    const s = r.status as 'success' | 'failure' | 'timeout' | 'missed'
+    entry[s]++
+    entry.total++
+    botStatMap.set(r.bot_id, entry)
+  }
+  const botPeriodStats = Array.from(botStatMap.values())
+    .sort((a, b) => b.total - a.total)
+    .slice(0, 8)
 
   return {
     stats,
@@ -194,7 +212,7 @@ async function fetchOverviewData(scope: TimeScope, offset: number, clientId: str
     recentFailures: recentFailuresList,
     missedRuns: missedList,
     calendarRows,
-    activityRuns,
+    botPeriodStats,
     allClients,
     periodStart: periodStart.toISOString(),
     periodEnd: periodEnd.toISOString(),
@@ -237,12 +255,7 @@ export default async function OverviewPage({
             <LiveActivityFeed activities={data.activities} />
           </div>
           <div className="lg:col-span-1">
-            <BotActivityChart
-              runs={data.activityRuns}
-              scope={scope}
-              periodStartIso={data.periodStart}
-              periodEndIso={data.periodEnd}
-            />
+            <BotActivityChart botStats={data.botPeriodStats} />
           </div>
         </div>
 
