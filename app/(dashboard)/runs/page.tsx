@@ -1,4 +1,5 @@
-import { createClient } from '@/lib/supabase/server'
+import { createClient, createServiceClient } from '@/lib/supabase/server'
+import { runSweep } from '@/lib/sweep'
 import { Header } from '@/components/layout/Header'
 import { StatusBadge } from '@/components/ui/Badge'
 import { EmptyState } from '@/components/ui/EmptyState'
@@ -18,6 +19,9 @@ export default async function RunsPage({
   const supabase = await createClient()
   // eslint-disable-next-line
   const svc: any = supabase
+
+  const serviceClient = await createServiceClient()
+  await runSweep(serviceClient)
 
   const filterStatus = searchParams.status
   const filterBotId = searchParams.bot_id
