@@ -277,7 +277,7 @@ x-bot-key: pa_live_...`} />
               <div className="space-y-2">
                 <ResponseRow status="200" description="Run created. Save the run_id for subsequent calls." />
                 <ResponseRow status="200 + idempotent: true" description="run_id already exists for this client_run_id. Run returned as-is." example='{ "run_id": "...", "status": "started", "idempotent": true }' />
-                <ResponseRow status="200 + warning: 409_concurrent_run_detected" description="New run created but another run is already active for this bot." />
+                <ResponseRow status="409" description="A run is already active and concurrent runs are disabled for this bot." example='{ "error": "A run is already active...", "existing_run_id": "..." }' />
                 <ResponseRow status="401" description="Missing or invalid x-bot-key header." />
                 <ResponseRow status="403" description="Bot is disabled in the dashboard." />
                 <ResponseRow status="429" description="Rate limit exceeded (60 req/min)." />

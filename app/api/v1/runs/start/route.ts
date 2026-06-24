@@ -36,6 +36,16 @@ export async function GET(request: NextRequest) {
     .eq('status', 'started')
     .single()
 
+  if (activeRun && !botConfig?.allow_concurrent_runs) {
+    return NextResponse.json(
+      {
+        error: 'A run is already active for this bot. Enable concurrent runs in bot settings to allow multiple simultaneous runs.',
+        existing_run_id: activeRun.id,
+      },
+      { status: 409 }
+    )
+  }
+
   const now = new Date().toISOString()
 
   const { data: newRun, error } = await svc
@@ -52,15 +62,6 @@ export async function GET(request: NextRequest) {
 
   if (error || !newRun) {
     return NextResponse.json({ error: 'Failed to create run' }, { status: 500 })
-  }
-
-  if (activeRun && !botConfig?.allow_concurrent_runs) {
-    return NextResponse.json({
-      run_id: newRun.id,
-      status: 'started',
-      warning: '409_concurrent_run_detected',
-      existing_run_id: activeRun.id,
-    })
   }
 
   return NextResponse.json({ run_id: newRun.id, status: 'started' })
