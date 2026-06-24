@@ -308,29 +308,38 @@ x-bot-key: pa_live_...`} />
                   <thead><tr><th>Parameter</th><th>Type</th><th>Description</th></tr></thead>
                   <tbody>
                     <ParamRow name="run_id" type="string" required description="The run_id returned by /runs/start." />
-                    <ParamRow name="checkpoint" type="string" required description="Name of this step or checkpoint. Shown as the title in the run timeline. Use URL encoding for spaces (e.g. Data+Fetched or Data%20Fetched)." />
+                    <ParamRow name="checkpoint" type="string" required description="Name of this step. Use + or %20 for spaces (e.g. Data+Fetched). The API decodes + to spaces and uppercases the title automatically." />
+                  </tbody>
+                </table>
+              </div>
+
+              <h4 className="text-sm font-semibold text-primary mb-3 flex items-center gap-2"><Hash size={14} /> Query Parameters</h4>
+              <div className="card overflow-hidden mb-6">
+                <table className="w-full data-table">
+                  <thead><tr><th>Parameter</th><th>Type</th><th>Description</th></tr></thead>
+                  <tbody>
+                    <ParamRow name="level" type="string" description='Log level for this checkpoint. Controls the colour in the run timeline. Defaults to "info".' values='"info" | "warning" | "error"' />
                   </tbody>
                 </table>
               </div>
 
               <div className="grid grid-cols-2 gap-4 mb-6">
                 <div>
-                  <p className="text-xs font-semibold text-muted uppercase tracking-wide mb-2">Request</p>
+                  <p className="text-xs font-semibold text-muted uppercase tracking-wide mb-2">Info checkpoint</p>
                   <CodeBlock lang="http" code={`GET /api/v1/runs/a1b2c3d4-.../log/Records+Fetched
 x-bot-key: pa_live_...`} />
                 </div>
                 <div>
-                  <p className="text-xs font-semibold text-muted uppercase tracking-wide mb-2">Response · 200</p>
-                  <CodeBlock lang="json" code={`{
-  "ok": true
-}`} />
+                  <p className="text-xs font-semibold text-muted uppercase tracking-wide mb-2">Warning / error level</p>
+                  <CodeBlock lang="http" code={`GET /api/v1/runs/a1b2c3d4-.../log/Validation+Failed?level=warning
+x-bot-key: pa_live_...`} />
                 </div>
               </div>
 
               <div className="space-y-2">
                 <ResponseRow status="200" description="Checkpoint recorded in the run timeline." />
-                <ResponseRow status="404" description="run_id not found." />
                 <ResponseRow status="403" description="Run belongs to a different bot." />
+                <ResponseRow status="404" description="run_id not found." />
                 <ResponseRow status="409" description="Run is not in started state — already ended." example={`{ "error": "Cannot log on a run with status 'success'" }`} />
               </div>
             </section>
