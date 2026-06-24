@@ -78,20 +78,19 @@ function ResponseRow({ status, description, example }: { status: string; descrip
 }
 
 const sections = [
-  { id: 'intro',       label: 'Introduction',    icon: Info },
-  { id: 'auth',        label: 'Authentication',   icon: Lock },
-  { id: 'start',       label: 'POST /runs/start', icon: Play },
-  { id: 'log',         label: 'POST /runs/log',   icon: FileText },
-  { id: 'end',         label: 'POST /runs/end',   icon: CheckCircle2 },
-  { id: 'errors',      label: 'Error Codes',      icon: AlertCircle },
-  { id: 'quickstart',  label: 'Quick Start',      icon: Zap },
+  { id: 'intro',       label: 'Introduction',      icon: Info },
+  { id: 'auth',        label: 'Authentication',     icon: Lock },
+  { id: 'start',       label: 'GET /runs/start',    icon: Play },
+  { id: 'log',         label: 'GET /:id/log/:step', icon: FileText },
+  { id: 'end',         label: 'GET /:id/end',       icon: CheckCircle2 },
+  { id: 'errors',      label: 'Error Codes',        icon: AlertCircle },
+  { id: 'quickstart',  label: 'Quick Start',        icon: Zap },
 ]
 
 export default function UsagePage() {
   const [active, setActive] = useState('intro')
   const scrollRef = useRef<HTMLDivElement>(null)
 
-  // Update active section on scroll
   useEffect(() => {
     const scrollEl = scrollRef.current
     if (!scrollEl) return
@@ -102,7 +101,6 @@ export default function UsagePage() {
       for (const { id } of sections) {
         const el = document.getElementById(id)
         if (!el) continue
-        // Section is "active" once its top has scrolled to within 120px of the container top
         if (el.getBoundingClientRect().top - containerTop <= 120) {
           current = id
         }
@@ -154,7 +152,7 @@ export default function UsagePage() {
           </div>
         </nav>
 
-        {/* Content — ref here so scroll is tracked on this element */}
+        {/* Content */}
         <div ref={scrollRef} className="flex-1 overflow-y-auto">
           <div className="max-w-3xl mx-auto px-6 py-8 space-y-16">
 
@@ -171,10 +169,14 @@ export default function UsagePage() {
                 Three endpoints are all you need: <strong className="text-primary">start</strong> a run when your flow begins,
                 optionally <strong className="text-primary">log</strong> checkpoints mid-flow, and <strong className="text-primary">end</strong> the run when it finishes.
               </p>
+              <p className="text-secondary leading-relaxed mb-6">
+                All endpoints use <strong className="text-primary">GET</strong> with query parameters and path segments — no request body required.
+                This makes them easy to call from any HTTP client, including Power Automate&apos;s built-in HTTP action.
+              </p>
               <div className="grid grid-cols-3 gap-4 mt-6">
                 {[
                   { step: '01', title: 'Register a Bot', desc: 'Create a bot in the dashboard and copy your API key.' },
-                  { step: '02', title: 'Call the API', desc: 'Add three HTTP actions to your Power Automate flow.' },
+                  { step: '02', title: 'Call the API', desc: 'Add three HTTP GET actions to your Power Automate flow.' },
                   { step: '03', title: 'Monitor', desc: 'Watch runs, logs, and incidents in the dashboard in real time.' },
                 ].map((s) => (
                   <div key={s.step} className="card p-4">
@@ -198,10 +200,9 @@ export default function UsagePage() {
                 All bot API endpoints require an <code className="text-blue-400 bg-surface px-1.5 py-0.5 rounded text-sm">x-bot-key</code> header.
                 Keys are generated when you register a bot and are shown only once — they cannot be retrieved again, only revoked and rotated.
               </p>
-              <CodeBlock lang="http" code={`POST /api/v1/runs/start HTTP/1.1
+              <CodeBlock lang="http" code={`GET /api/v1/runs/start HTTP/1.1
 Host: sentinel-bot-monitoring.vercel.app
-x-bot-key: pa_live_a1b2c3d4e5f6...
-Content-Type: application/json`} />
+x-bot-key: pa_live_a1b2c3d4e5f6...`} />
               <div className="mt-4 space-y-3">
                 <div className="flex items-start gap-3 p-4 rounded-xl border border-amber-500/20 bg-amber-500/5">
                   <AlertCircle size={16} className="text-amber-400 shrink-0 mt-0.5" />
@@ -229,7 +230,7 @@ Content-Type: application/json`} />
                 <h2 className="text-2xl font-bold text-primary">Start a Run</h2>
               </div>
               <div className="flex items-center gap-3 mb-6">
-                <MethodBadge method="POST" />
+                <MethodBadge method="GET" />
                 <code className="text-sm text-primary font-mono">/api/v1/runs/start</code>
               </div>
               <p className="text-secondary leading-relaxed mb-6">
@@ -243,15 +244,14 @@ Content-Type: application/json`} />
                   <thead><tr><th>Header</th><th>Value</th><th>Required</th></tr></thead>
                   <tbody>
                     <tr><td><code className="text-blue-400 font-mono text-sm">x-bot-key</code></td><td className="text-secondary text-sm">Your bot API key</td><td><span className="text-red-400 text-xs font-bold">Yes</span></td></tr>
-                    <tr><td><code className="text-blue-400 font-mono text-sm">Content-Type</code></td><td className="text-secondary text-sm">application/json</td><td><span className="text-red-400 text-xs font-bold">Yes</span></td></tr>
                   </tbody>
                 </table>
               </div>
 
-              <h4 className="text-sm font-semibold text-primary mb-3 flex items-center gap-2"><Hash size={14} /> Request Body</h4>
+              <h4 className="text-sm font-semibold text-primary mb-3 flex items-center gap-2"><Hash size={14} /> Query Parameters</h4>
               <div className="card overflow-hidden mb-6">
                 <table className="w-full data-table">
-                  <thead><tr><th>Field</th><th>Type</th><th>Description</th></tr></thead>
+                  <thead><tr><th>Parameter</th><th>Type</th><th>Description</th></tr></thead>
                   <tbody>
                     <ParamRow name="vm_name" type="string" description="Name or identifier of the machine running the flow. Useful for desktop flows." />
                     <ParamRow name="client_run_id" type="string" description="Your own unique ID for this run. If provided and a run with this ID already exists, the existing run is returned instead (idempotency)." />
@@ -262,13 +262,11 @@ Content-Type: application/json`} />
               <div className="grid grid-cols-2 gap-4 mb-6">
                 <div>
                   <p className="text-xs font-semibold text-muted uppercase tracking-wide mb-2">Request</p>
-                  <CodeBlock lang="json" code={`{
-  "vm_name": "DESKTOP-MATHER-01",
-  "client_run_id": "my-flow-run-2026-001"
-}`} />
+                  <CodeBlock lang="http" code={`GET /api/v1/runs/start?vm_name=DESKTOP-01&client_run_id=my-run-001
+x-bot-key: pa_live_...`} />
                 </div>
                 <div>
-                  <p className="text-xs font-semibold text-muted uppercase tracking-wide mb-2">Response · 201</p>
+                  <p className="text-xs font-semibold text-muted uppercase tracking-wide mb-2">Response · 200</p>
                   <CodeBlock lang="json" code={`{
   "run_id": "a1b2c3d4-...",
   "status": "started"
@@ -277,7 +275,7 @@ Content-Type: application/json`} />
               </div>
 
               <div className="space-y-2">
-                <ResponseRow status="201" description="Run created. Save the run_id." />
+                <ResponseRow status="200" description="Run created. Save the run_id for subsequent calls." />
                 <ResponseRow status="200 + idempotent: true" description="run_id already exists for this client_run_id. Run returned as-is." example='{ "run_id": "...", "status": "started", "idempotent": true }' />
                 <ResponseRow status="200 + warning: 409_concurrent_run_detected" description="New run created but another run is already active for this bot." />
                 <ResponseRow status="401" description="Missing or invalid x-bot-key header." />
@@ -292,27 +290,25 @@ Content-Type: application/json`} />
                 <div className="w-9 h-9 rounded-xl bg-blue-500/10 flex items-center justify-center">
                   <FileText size={18} className="text-blue-400" />
                 </div>
-                <h2 className="text-2xl font-bold text-primary">Log a Step</h2>
+                <h2 className="text-2xl font-bold text-primary">Log a Checkpoint</h2>
               </div>
               <div className="flex items-center gap-3 mb-6">
-                <MethodBadge method="POST" />
-                <code className="text-sm text-primary font-mono">/api/v1/runs/log</code>
+                <MethodBadge method="GET" />
+                <code className="text-sm text-primary font-mono">/api/v1/runs/:run_id/log/:checkpoint</code>
               </div>
               <p className="text-secondary leading-relaxed mb-6">
                 Optional but recommended. Call this after each significant step in your flow to build an audit-ready timeline.
+                The checkpoint name is passed directly in the URL path — no request body needed.
                 You can call this endpoint as many times as needed during a run.
               </p>
 
-              <h4 className="text-sm font-semibold text-primary mb-3 flex items-center gap-2"><Hash size={14} /> Request Body</h4>
+              <h4 className="text-sm font-semibold text-primary mb-3 flex items-center gap-2"><Hash size={14} /> Path Parameters</h4>
               <div className="card overflow-hidden mb-6">
                 <table className="w-full data-table">
-                  <thead><tr><th>Field</th><th>Type</th><th>Description</th></tr></thead>
+                  <thead><tr><th>Parameter</th><th>Type</th><th>Description</th></tr></thead>
                   <tbody>
                     <ParamRow name="run_id" type="string" required description="The run_id returned by /runs/start." />
-                    <ParamRow name="log_title" type="string" required description="Short title for this step. Shown prominently in the timeline." />
-                    <ParamRow name="message" type="string" description="Longer description or details for this step (e.g., record counts, URLs, values)." />
-                    <ParamRow name="level" type="string" description="Severity level. Defaults to info." values='"info" | "warning" | "error"' />
-                    <ParamRow name="step_index" type="number" description="Step number. Used to order steps in the timeline when timestamps are too close." />
+                    <ParamRow name="checkpoint" type="string" required description="Name of this step or checkpoint. Shown as the title in the run timeline. Use URL encoding for spaces (e.g. Data+Fetched or Data%20Fetched)." />
                   </tbody>
                 </table>
               </div>
@@ -320,13 +316,8 @@ Content-Type: application/json`} />
               <div className="grid grid-cols-2 gap-4 mb-6">
                 <div>
                   <p className="text-xs font-semibold text-muted uppercase tracking-wide mb-2">Request</p>
-                  <CodeBlock lang="json" code={`{
-  "run_id": "a1b2c3d4-...",
-  "log_title": "Records fetched from PCC",
-  "message": "Retrieved 142 records",
-  "level": "info",
-  "step_index": 1
-}`} />
+                  <CodeBlock lang="http" code={`GET /api/v1/runs/a1b2c3d4-.../log/Records+Fetched
+x-bot-key: pa_live_...`} />
                 </div>
                 <div>
                   <p className="text-xs font-semibold text-muted uppercase tracking-wide mb-2">Response · 200</p>
@@ -337,9 +328,8 @@ Content-Type: application/json`} />
               </div>
 
               <div className="space-y-2">
-                <ResponseRow status="200" description="Log entry recorded." />
-                <ResponseRow status="400" description="run_id or log_title missing." example='{ "error": "run_id and log_title are required" }' />
-                <ResponseRow status="404" description="Run not found." />
+                <ResponseRow status="200" description="Checkpoint recorded in the run timeline." />
+                <ResponseRow status="404" description="run_id not found." />
                 <ResponseRow status="403" description="Run belongs to a different bot." />
                 <ResponseRow status="409" description="Run is not in started state — already ended." example={`{ "error": "Cannot log on a run with status 'success'" }`} />
               </div>
@@ -354,42 +344,44 @@ Content-Type: application/json`} />
                 <h2 className="text-2xl font-bold text-primary">End a Run</h2>
               </div>
               <div className="flex items-center gap-3 mb-6">
-                <MethodBadge method="POST" />
-                <code className="text-sm text-primary font-mono">/api/v1/runs/end</code>
+                <MethodBadge method="GET" />
+                <code className="text-sm text-primary font-mono">/api/v1/runs/:run_id/end</code>
               </div>
               <p className="text-secondary leading-relaxed mb-6">
                 Call this as the final action in your flow — both on the success path and in any error/catch branches.
                 If the run was already ended (e.g., timed out by Sentinel), the call is a no-op and returns the existing duration.
               </p>
 
-              <h4 className="text-sm font-semibold text-primary mb-3 flex items-center gap-2"><Hash size={14} /> Request Body</h4>
+              <h4 className="text-sm font-semibold text-primary mb-3 flex items-center gap-2"><Hash size={14} /> Path Parameters</h4>
               <div className="card overflow-hidden mb-6">
                 <table className="w-full data-table">
-                  <thead><tr><th>Field</th><th>Type</th><th>Description</th></tr></thead>
+                  <thead><tr><th>Parameter</th><th>Type</th><th>Description</th></tr></thead>
                   <tbody>
                     <ParamRow name="run_id" type="string" required description="The run_id returned by /runs/start." />
+                  </tbody>
+                </table>
+              </div>
+
+              <h4 className="text-sm font-semibold text-primary mb-3 flex items-center gap-2"><Hash size={14} /> Query Parameters</h4>
+              <div className="card overflow-hidden mb-6">
+                <table className="w-full data-table">
+                  <thead><tr><th>Parameter</th><th>Type</th><th>Description</th></tr></thead>
+                  <tbody>
                     <ParamRow name="status" type="string" required description="Final outcome of the run." values='"success" | "failure"' />
-                    <ParamRow name="message" type="string" description="Summary message shown in the dashboard and incident list. Required when status is failure — describe what went wrong." />
                   </tbody>
                 </table>
               </div>
 
               <div className="grid grid-cols-2 gap-4 mb-6">
                 <div>
-                  <p className="text-xs font-semibold text-muted uppercase tracking-wide mb-2">Success request</p>
-                  <CodeBlock lang="json" code={`{
-  "run_id": "a1b2c3d4-...",
-  "status": "success",
-  "message": "142 records synced to Rexpert"
-}`} />
+                  <p className="text-xs font-semibold text-muted uppercase tracking-wide mb-2">Success</p>
+                  <CodeBlock lang="http" code={`GET /api/v1/runs/a1b2c3d4-.../end?status=success
+x-bot-key: pa_live_...`} />
                 </div>
                 <div>
-                  <p className="text-xs font-semibold text-muted uppercase tracking-wide mb-2">Failure request</p>
-                  <CodeBlock lang="json" code={`{
-  "run_id": "a1b2c3d4-...",
-  "status": "failure",
-  "message": "Connection to Rexpert timed out"
-}`} />
+                  <p className="text-xs font-semibold text-muted uppercase tracking-wide mb-2">Failure</p>
+                  <CodeBlock lang="http" code={`GET /api/v1/runs/a1b2c3d4-.../end?status=failure
+x-bot-key: pa_live_...`} />
                 </div>
               </div>
 
@@ -404,8 +396,9 @@ Content-Type: application/json`} />
               <div className="space-y-2">
                 <ResponseRow status="200" description="Run ended. duration_secs is wall-clock time from start to end." />
                 <ResponseRow status="200 + already_ended: true" description="Run was already ended (timeout/missed). No change made." example='{ "ok": true, "duration_secs": 3600, "already_ended": true }' />
-                <ResponseRow status="400" description="run_id missing or status not success/failure." />
-                <ResponseRow status="404" description="Run not found." />
+                <ResponseRow status="400" description='status query param missing or not "success" / "failure".' />
+                <ResponseRow status="404" description="run_id not found." />
+                <ResponseRow status="403" description="Run belongs to a different bot." />
               </div>
             </section>
 
@@ -425,11 +418,11 @@ Content-Type: application/json`} />
                   <thead><tr><th>Status</th><th>Meaning</th><th>Common cause</th></tr></thead>
                   <tbody>
                     {[
-                      ['400', 'Bad Request', 'Missing required fields or invalid values'],
+                      ['400', 'Bad Request', 'Missing or invalid query parameter (e.g. status not success/failure)'],
                       ['401', 'Unauthorized', 'Missing or invalid x-bot-key header'],
                       ['403', 'Forbidden', 'Bot is disabled, or run belongs to another bot'],
                       ['404', 'Not Found', 'run_id does not exist'],
-                      ['409', 'Conflict', 'Logging on an already-ended run'],
+                      ['409', 'Conflict', 'Logging a checkpoint on an already-ended run'],
                       ['429', 'Too Many Requests', 'Rate limit exceeded (60 req/min)'],
                       ['500', 'Server Error', 'Database write failed — retry after a moment'],
                     ].map(([code, meaning, cause]) => (
@@ -460,34 +453,18 @@ Content-Type: application/json`} />
 KEY="pa_live_your_key_here"
 
 # 1. Start the run
-RUN=$(curl -s -X POST "$BASE/runs/start" \\
-  -H "x-bot-key: $KEY" \\
-  -H "Content-Type: application/json" \\
-  -d '{"vm_name": "my-server"}')
+RUN=$(curl -s "$BASE/runs/start?vm_name=my-server" \\
+  -H "x-bot-key: $KEY")
 
 RUN_ID=$(echo $RUN | jq -r '.run_id')
 
-# 2. Log a step
-curl -s -X POST "$BASE/runs/log" \\
-  -H "x-bot-key: $KEY" \\
-  -H "Content-Type: application/json" \\
-  -d "{
-    \\"run_id\\": \\"$RUN_ID\\",
-    \\"log_title\\": \\"Data processed\\",
-    \\"message\\": \\"All records validated\\",
-    \\"level\\": \\"info\\",
-    \\"step_index\\": 1
-  }"
+# 2. Log a checkpoint
+curl -s "$BASE/runs/$RUN_ID/log/Data+Processed" \\
+  -H "x-bot-key: $KEY"
 
 # 3. End the run
-curl -s -X POST "$BASE/runs/end" \\
-  -H "x-bot-key: $KEY" \\
-  -H "Content-Type: application/json" \\
-  -d "{
-    \\"run_id\\": \\"$RUN_ID\\",
-    \\"status\\": \\"success\\",
-    \\"message\\": \\"Completed successfully\\"
-  }"`} />
+curl -s "$BASE/runs/$RUN_ID/end?status=success" \\
+  -H "x-bot-key: $KEY"`} />
 
               <div className="mt-8 p-5 rounded-2xl border border-blue-500/20 bg-blue-500/5">
                 <div className="flex items-center gap-2 mb-3">
@@ -496,11 +473,11 @@ curl -s -X POST "$BASE/runs/end" \\
                 </div>
                 <ol className="space-y-2 text-sm text-secondary">
                   {[
-                    'Add an HTTP action as the very first step — call /runs/start and store the run_id in a variable.',
-                    'Wrap your main flow logic in a Scope. At the end of the scope, call /runs/log for each major checkpoint.',
-                    'Add a Configure run after action on the scope set to "has failed".',
-                    'In the failure branch, call /runs/end with status: "failure" and the error message.',
-                    'In the success branch (after the scope), call /runs/end with status: "success".',
+                    'Add an HTTP action as the very first step — GET /runs/start with x-bot-key header. Store the run_id from the response body in a variable.',
+                    'After each major step in your flow, add an HTTP action calling GET /runs/{run_id}/log/{checkpoint-name}.',
+                    'Add a Configure run after action on your main scope set to "has failed".',
+                    'In the failure branch, call GET /runs/{run_id}/end?status=failure.',
+                    'In the success branch (after the scope), call GET /runs/{run_id}/end?status=success.',
                   ].map((s, i) => (
                     <li key={i} className="flex items-start gap-3">
                       <span className="w-5 h-5 rounded-full bg-blue-500/20 text-blue-400 text-xs font-bold flex items-center justify-center shrink-0 mt-0.5">{i + 1}</span>
