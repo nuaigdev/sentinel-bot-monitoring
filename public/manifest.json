@@ -1,0 +1,17 @@
+{
+  "name": "Sentinel — Bot Monitoring",
+  "short_name": "Sentinel",
+  "description": "Real-time Power Automate bot monitoring and observability platform by NuAIg LLC.",
+  "start_url": "/overview",
+  "display": "standalone",
+  "background_color": "#0B1120",
+  "theme_color": "#0B1120",
+  "icons": [
+    {
+      "src": "/logo.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
+}
